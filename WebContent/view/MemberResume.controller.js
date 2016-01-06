@@ -6,6 +6,7 @@ sap.ui.define([
 	return BaseController.extend("sap.ui.demo.mORMot.view.MemberResume", {
 		onInit: function () {
 			this._router().getRoute("MemberResume").attachMatched(this._onRouteMatched, this);			
+			this._router().getRoute("TeamMemberResume").attachMatched(this._onRouteMatched, this);			
 		},
 		_onRouteMatched : function (oEvent) {
 			var oView = this.getView();

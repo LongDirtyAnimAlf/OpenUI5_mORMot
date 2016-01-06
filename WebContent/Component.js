@@ -48,15 +48,16 @@ sap.ui.define([
 						target: ["home" , "MemberView"]
 					},
 					{
-						pattern: "Member/{MemberID}/resume",
-						name: "MemberResume",
-						target: ["home", "MemberResume"]
-					},
-					{
 						pattern: "Team/{TeamID}/Member/{MemberID}/resume",
 						name: "MemberResume",
 						target: ["TeamView", "MemberResume"]							
+					},
+					{
+						pattern: "Member/{MemberID}/resume",
+						name: "TeamMemberResume",
+						target: ["home", "MemberResume"]
 					}
+					
 				],
 				targets: {
 					MemberView: {
@@ -105,7 +106,6 @@ sap.ui.define([
 			this.setModel(oI18nModel, "i18n");
 
 			var oModel = new sap.ui.model.mORMot.mORMotModel(model.Config.getServiceUrl("/root/"));
-			oModel.setUseBatch(false);
 
 			this.setModel(oModel);
 

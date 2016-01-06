@@ -11,29 +11,43 @@ sap.ui.define([
 			 FilterOperator) {
 	"use strict";
 
-	var sId=0;
 	
 	return BaseController.extend("sap.ui.demo.mORMot.view.Team", {
 		formatter : formatter,
 
+		_sId:0,		
+		
 		onInit : function () {
 			this._router().getRoute("Team").attachMatched(this._loadTeam, this);
 		},
 		
 		_loadTeam : function(oEvent) {
+			this._sId = oEvent.getParameter("arguments").TeamID;			
+			//this._sId = oEvent.getParameters().arguments.TeamID;
+			var	oView = this.getView();
+			var sPath = "/Team/"+this._sId;
+			var oData = oView.getModel().getData(sPath);
+			
+			if (oData) {
+				oView.byId("page").setTitle(oData.Name);
+			} else {
+				oView.byId("page").setTitle(this._sId);
+			}
+			
+			
 			var oMemberList = this.getView().byId("MemberList");
 			this._changeNoDataTextToIndicateLoading(oMemberList);
 			var oBinding = oMemberList.getBinding("items");
 			oBinding.attachDataReceived(this.fnDataReceived, this);
-			//sId = oEvent.getParameter("arguments").TeamID;
-			sId = oEvent.getParameters().arguments.TeamID
+
 			// not available !!
 			this._sMemberId = oEvent.getParameter("arguments").MemberID;
 			
-			this.getView().byId("page").setTitle(sId);
+			
+			
 			
 			// filter on team members
-			var oFilter = new Filter("MemberTeam", FilterOperator.EQ, sId);
+			var oFilter = new Filter("MemberTeam", FilterOperator.EQ, this._sId);
 			oBinding.filter([ oFilter ]);
 		},
 
@@ -76,7 +90,7 @@ sap.ui.define([
 			sKey = sKey.substr(1);
 			var oNode = oModel.oData[sKey];
 			var sMemberId = oNode.ID;
-			this._router().navTo("Member", {TeamID: sId, MemberID: sMemberId}, !Device.system.phone);
+			this._router().navTo("Member", {TeamID: this._sId, MemberID: sMemberId}, !Device.system.phone);
 		}
 	});
 });

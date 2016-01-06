@@ -7,6 +7,8 @@ sap.ui.define([
 	return BaseController.extend("sap.ui.demo.mORMot.view.Member", {
 		formatter : formatter,
 
+		_sTeamId : 0,
+		
 		onInit : function () {
 			this._router().getRoute("Member").attachPatternMatched(this._routePatternMatched, this);
 			this._router().getRoute("TeamMember").attachPatternMatched(this._routePatternMatched, this);
@@ -14,10 +16,10 @@ sap.ui.define([
 
 		_routePatternMatched: function(oEvent) {
 			var sId = oEvent.getParameter("arguments").MemberID;
+			this._sTeamId = (oEvent.getParameter("arguments").TeamID || 0);
 			var	oView = this.getView();
 			var oModel = oView.getModel();
 			var sPath = "/Member/"+sId;
-			var sKey = sPath.substr(1);
 			var oData = oModel.getData(sPath);
 			
 			//oView.objectBindings({			
@@ -45,11 +47,18 @@ sap.ui.define([
 		},
 		
 		onShowResume : function (oEvent) {
+			var that = this;
 			var oData = this.getView().getBindingContext().getProperty();
 			if (oData) {
-				this._router().navTo("MemberResume", {
-					TeamID : oData.MemberTeam, MemberID : oData.ID				
-				});
+				if (this._sTeamId>0) {
+					this._router().navTo("MemberResume", {
+						TeamID : this._sTeamId, MemberID : oData.ID				
+					});
+				} else {
+					this._router().navTo("TeamMemberResume", {
+						MemberID : oData.ID				
+					});
+				}
 			}
 		},
 		

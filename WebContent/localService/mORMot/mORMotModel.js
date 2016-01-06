@@ -45,6 +45,7 @@ sap.ui.define([
 	 * @param {string} [mParameters.defaultOperationMode] sets the default operation mode for the model. If not set, sap.ui.model.odata.OperationModel.Server is used.
 	 * @param {string} [mParameters.defaultUpdateMethod] sets the default update method which is used for all update requests. If not set, sap.ui.model.odata.UpdateMethod.Merge is used.
 	 * @param {bolean} [mParameters.disableHeadRequestForToken=false] Set this flag to true if your service does not support HEAD requests for fetching the service document (and thus the CSRF-token) to avoid sending a HEAD-request before falling back to GET
+	 * @param {bolean} [mParameters.mORMotRootResponse=true] Set this flag to false if you want the normal mORMOt behavior when retrieving a root response 
 	 *
 	 * @class
 	 	 *
@@ -66,6 +67,7 @@ sap.ui.define([
 			mHeaders, bTokenHandling,
 			bWithCredentials,
 			bUseBatch, bRefreshAfterChange,
+			bmORMotRootResponse,
 			sDefaultCountMode, sDefaultBindingMode, sDefaultOperationMode,
 			mServiceUrlParams, bJSON,
 			sDefaultUpdateMethod, bDisableHeadRequestForToken,
@@ -91,6 +93,7 @@ sap.ui.define([
 				bJSON = mParameters.json;
 				sDefaultUpdateMethod = mParameters.defaultUpdateMethod;
 				bDisableHeadRequestForToken = mParameters.disableHeadRequestForToken;
+				bmORMotRootResponse = mParameters.mORMotRootResponse;				
 			}
 			
 			this.oServiceData = {};
@@ -111,13 +114,15 @@ sap.ui.define([
 
 			this.bTokenHandling = bTokenHandling !== false;
 			this.bWithCredentials = bWithCredentials === true;
-			this.bUseBatch = bUseBatch !== false;
+			this.bUseBatch = bUseBatch === true;
 			this.bRefreshAfterChange = bRefreshAfterChange !== false;
 			this.sDefaultCountMode = sDefaultCountMode || CountMode.None;			
 			this.sDefaultOperationMode = sDefaultOperationMode || OperationMode.Client;			
 			this.sRefreshGroupId = undefined;
 			this.bIncludeInCurrentBatch = false;
 			this.bDisableHeadRequestForToken = !!bDisableHeadRequestForToken;
+			this.bmORMotRootResponse = bmORMotRootResponse !== false;			
+			
 
 			//collect internal changes in a deferred group as default
 			this.sDefaultChangeGroup = "changes";
@@ -1205,6 +1210,7 @@ sap.ui.define([
 	 */
 	mORMotModel.prototype.createCustomParams = function(mParameters) {
 		var aCustomParams = [],
+		bSelect = false,
 		mCustomQueryOptions,
 		mSupportedParams = {
 				select: true
@@ -1213,8 +1219,15 @@ sap.ui.define([
 		for (var sName in mParameters) {
 			if (sName in mSupportedParams) {
 				aCustomParams.push(sName + "=" + jQuery.sap.encodeURL(mParameters[sName]));
+				bSelect = (bSelect || sName=="select");
 			}
 		}
+		
+		if (!bSelect && this.bmORMotRootResponse) {
+			aCustomParams.push("select=" + jQuery.sap.encodeURL(''));
+			//aCustomParams.push("select=" + jQuery.sap.encodeURL('*'));			
+		}
+		
 		return aCustomParams.join("&");
 	};
 
@@ -3441,6 +3454,15 @@ sap.ui.define([
 		this.bUseBatch = bUseBatch;
 	};
 
+	/**
+	 * @param {boolean} [bmORMotRootResponse=false] whether the mORMot root requests results should be expanded beyond only the ID's 
+	 * @public
+	 */
+	mORMotModel.prototype.setmORMotRootResponse  = function(bmORMotRootResponse) {
+		this.bmORMotRootResponse = bmORMotRootResponse;
+	};
+	
+	
 	/**
 	 * Formats a JavaScript value according to the given
 	 * <a href="http://www.odata.org/documentation/odata-version-2-0/overview#AbstractTypeSystem">

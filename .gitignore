@@ -43,7 +43,9 @@ Temporary Items
 .apdisk
 
 *.ppu
+*.dcu
 *.o
+*.exe
 *.obj
 *.s
 *.or
@@ -57,7 +59,17 @@ Temporary Items
 *.bak
 *.local
 
+*.project
+*.classpath
+
 *.log
+
+*.db3
+
 backup/
 lib/
 lib*/
+mORMot-master/
+.settings/
+build/
+src/
