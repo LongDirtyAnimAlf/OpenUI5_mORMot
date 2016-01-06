@@ -1,0 +1,86 @@
+object Form1: TForm1
+  Left = 394
+  Height = 220
+  Top = 274
+  Width = 434
+  Caption = ' 04 - HTTP Server'
+  ClientHeight = 220
+  ClientWidth = 434
+  Color = clBtnFace
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'Tahoma'
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
+  LCLVersion = '1.5'
+  object Label1: TLabel
+    Left = 8
+    Height = 33
+    Top = 8
+    Width = 297
+    Alignment = taCenter
+    AutoSize = False
+    Font.Color = clTeal
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 56
+    Height = 48
+    Top = 56
+    Width = 187
+    Alignment = taCenter
+    Caption = 'HTTP Server is running on 8080.'#13#10'Also serving /WebContent'#13#10'at localhost:8080/static'
+    ParentColor = False
+    WordWrap = True
+  end
+  object Button1: TButton
+    Left = 344
+    Height = 32
+    Top = 72
+    Width = 80
+    Caption = 'Quit'
+    OnClick = Button1Click
+    TabOrder = 0
+  end
+  object btnOpen: TButton
+    Left = 344
+    Height = 29
+    Top = 40
+    Width = 80
+    Caption = 'Open site'
+    OnClick = btnOpenClick
+    TabOrder = 1
+  end
+  object Memo1: TMemo
+    Left = 8
+    Height = 106
+    Top = 112
+    Width = 416
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Lines.Strings = (
+      'Memo1'
+    )
+    ScrollBars = ssVertical
+    TabOrder = 2
+  end
+  object btnRoot: TButton
+    Left = 344
+    Height = 29
+    Top = 8
+    Width = 80
+    Caption = 'Select root'
+    OnClick = btnRootClick
+    TabOrder = 3
+  end
+  object OpenDialog1: TOpenDialog
+    Filter = 'html|*.html|htm|*.htm|all|*.*'
+    Options = [ofReadOnly, ofHideReadOnly, ofAllowMultiSelect, ofFileMustExist, ofCreatePrompt, ofNoTestFileCreate, ofNoNetworkButton, ofEnableSizing, ofViewDetail, ofAutoPreview]
+    left = 274
+    top = 62
+  end
+end

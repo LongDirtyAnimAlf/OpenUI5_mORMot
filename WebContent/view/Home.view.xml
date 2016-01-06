@@ -1,0 +1,89 @@
+<mvc:View controllerName="sap.ui.demo.mORMot.view.Home"
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:h="http://www.w3.org/1999/xhtml">
+	<Page
+		id="page"
+		title="{i18n>HOME_TITLE}"
+		showFooter="{device>/isNoPhone}" >
+		<subHeader>
+			<Toolbar id="searchBar">
+				<SearchField
+					id="searchField"
+					showRefreshButton="{device>/isNoTouch}"
+					placeholder="{i18n>HOME_SEARCH_PLACEHOLDER}"
+					search="handleSearch"
+					tooltip="{i18n>HOME_SEARCH_TOOLTIP}"
+					width="100%">
+				</SearchField>
+			</Toolbar>
+		</subHeader>
+		<footer>
+			<Toolbar id="SearchButtonsToolbar">
+				<Button
+					icon="sap-icon://sort"
+					id="SortFirstNameButton" 
+					text="{i18n>MEMBER_SORTFIRSTNAME_BUTTON_TEXT}"
+					press="handleMemberSortFirstNameButtonPress" />
+				<Button
+					icon="sap-icon://sort"
+					id="SortLastNameButton" 
+					text="{i18n>MEMBER_SORTLASTNAME_BUTTON_TEXT}"
+					press="handleMemberSortLastNameButtonPress" />
+			</Toolbar>
+		</footer>
+		<content>
+			<PullToRefresh
+				id="pullToRefresh"
+				visible="{device>/isTouch}" 
+				refresh="handleRefresh" />
+			<!-- This list shows the search results for Members -->
+			<List
+				id="MemberList"
+				mode="{device>/listMode}"
+				select="handleMemberListSelect"
+				noDataText="{i18n>HOME_NO_DATA}"
+				items="{
+					path : '/Member',
+					parameters : {select:'ID,FirstName,LastName,PictureUrl,Phone,MemberTeam'}
+				}">
+				<items>
+					<ObjectListItem
+						type="{device>/listItemType}"
+						icon="{PictureUrl}"
+						title="{
+				 			parts:[
+                     			{path:'FirstName'},
+                     			{path:'LastName'}
+                			]
+						}"
+						press="handleMemberListItemPress"
+						iconDensityAware="false" >
+					</ObjectListItem>
+				</items>
+			</List>
+			<!-- This list shows the Teams -->
+			<List
+				id="TeamList"
+				headerText="{i18n>HOME_TEAM_LIST_HEADER}"
+				mode="None"
+				items="{
+					path : '/Team',
+					sorter : {
+						path : 'Name',
+						descending: false
+					},
+					parameters : {select:'ID,Name'}
+				}">
+				<items>
+					<StandardListItem
+						title="{Name}"
+						type="Active"
+						press="handleTeamListItemPress" >
+					</StandardListItem>
+				</items>
+			</List>
+		</content>
+	</Page>
+</mvc:View>

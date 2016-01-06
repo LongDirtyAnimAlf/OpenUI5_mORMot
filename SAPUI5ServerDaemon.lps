@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="5">
+      <Unit0>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <CursorPos Y="10"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="RESTData.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="22"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="RESTServerClass.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="22"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="SampleData.pas"/>
+        <EditorIndex Value="1"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="mORMot-master\SynLog.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="533"/>
+        <CursorPos X="14" Y="550"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit4>
+    </Units>
+    <JumpHistory Count="3" HistoryIndex="2">
+      <Position1>
+        <Filename Value="SampleData.pas"/>
+        <Caret Column="31"/>
+      </Position1>
+      <Position2>
+        <Filename Value="SampleData.pas"/>
+        <Caret Line="10" Column="3"/>
+      </Position2>
+      <Position3>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="77" TopLine="42"/>
+      </Position3>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

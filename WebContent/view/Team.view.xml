@@ -1,0 +1,51 @@
+<mvc:View controllerName="sap.ui.demo.mORMot.view.Team"
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:control="control"
+	xmlns:h="http://www.w3.org/1999/xhtml">
+	<Page
+		id="page"
+		showNavButton="true"
+		navButtonPress="handleNavButtonPress"
+		showFooter="{device>/isNoPhone}" >
+		<footer>
+			<Toolbar>
+			</Toolbar>
+		</footer>
+		<content>
+			<List
+				id="MemberList"
+				mode="{device>/listMode}"
+				select="handleMemberListSelect"
+				noDataText="{i18n>TEAM_NO_DATA}"
+				busyIndicatorDelay="0"
+				items="{
+					path : '/Member',
+					sorter : {
+						path : 'LastName',
+						descending : false
+					},
+					parameters : {select:'ID,FirstName,LastName,PictureUrl,Phone,MemberTeam'}					
+				}">
+				<items>
+					<ObjectListItem
+						type="{device>/listItemType}"
+						icon="{PictureUrl}"
+						title="{
+				 			parts:[
+                     			{path:'FirstName'},
+                     			{path:'LastName'}
+                			]
+						}"
+						press="handleMemberListItemPress"
+						iconDensityAware="false" >
+						<attributes>
+							<ObjectAttribute text="{Phone}"/>
+						</attributes>
+					</ObjectListItem>
+				</items>
+			</List>
+		</content>
+	</Page>
+</mvc:View>

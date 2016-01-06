@@ -1,0 +1,25 @@
+{ This is an automatically generated lazarus resource file }
+
+LazarusResources.Add('TForm1','FORMDATA',[
+  'TPF0'#6'TForm1'#5'Form1'#4'Left'#3']'#1#6'Height'#3#220#0#3'Top'#3#154#0#5'W'
+  +'idth'#3#178#1#7'Caption'#6#17' 04 - HTTP Server'#12'ClientHeight'#3#220#0#11
+  +'ClientWidth'#3#178#1#5'Color'#7#9'clBtnFace'#10'Font.Color'#7#12'clWindowTe'
+  +'xt'#11'Font.Height'#2#243#9'Font.Name'#6#6'Tahoma'#8'OnCreate'#7#10'FormCre'
+  +'ate'#9'OnDestroy'#7#11'FormDestroy'#6'OnShow'#7#8'FormShow'#10'LCLVersion'#6
+  +#3'1.5'#0#6'TLabel'#6'Label1'#4'Left'#2'P'#6'Height'#2'!'#3'Top'#2#16#5'Widt'
+  +'h'#3')'#1#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#10'Font.Color'#7#6'clTea'
+  +'l'#11'Font.Height'#2#240#9'Font.Name'#6#6'Tahoma'#10'Font.Style'#11#6'fsBol'
+  +'d'#0#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Label2'#4'Left'#3
+  +#136#0#6'Height'#2'0'#3'Top'#2'X'#5'Width'#3#187#0#9'Alignment'#7#8'taCenter'
+  +#7'Caption'#6'SHTTP Server is running on 8080.'#13#10'Also serving /WebConte'
+  +'nt'#13#10'at localhost:8080/static'#11'ParentColor'#8#8'WordWrap'#9#0#0#7'T'
+  +'Button'#7'Button1'#4'Left'#3#184#0#6'Height'#2#25#3'Top'#3#184#0#5'Width'#2
+  +'K'#7'Caption'#6#4'Quit'#7'OnClick'#7#12'Button1Click'#8'TabOrder'#2#0#0#0#7
+  +'TButton'#11'btnShowLogs'#4'Left'#3#184#0#6'Height'#2#25#3'Top'#3#142#0#5'Wi'
+  +'dth'#2'D'#7'Caption'#6#11'btnShowLogs'#7'OnClick'#7#16'btnShowLogsClick'#8
+  +'TabOrder'#2#1#0#0#7'TButton'#14'btnOpenBrowser'#4'Left'#3'"'#1#6'Height'#2
+  +'%'#3'Top'#3#148#0#5'Width'#2'`'#7'Caption'#6#14'btnOpenBrowser'#7'OnClick'#7
+  +#19'btnOpenBrowserClick'#8'TabOrder'#2#2#0#0#5'TMemo'#5'Memo1'#4'Left'#2#8#6
+  +'Height'#3#161#0#3'Top'#2'9'#5'Width'#2'w'#13'Lines.Strings'#1#6#5'Memo1'#0
+  +#10'ScrollBars'#7#10'ssVertical'#8'TabOrder'#2#3#0#0#0
+]);

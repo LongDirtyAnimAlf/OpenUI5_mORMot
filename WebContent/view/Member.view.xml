@@ -1,0 +1,55 @@
+<mvc:View
+	controllerName="sap.ui.demo.mORMot.view.Member"
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:control="control"
+	xmlns:h="http://www.w3.org/1999/xhtml">
+	<Page
+		id="page"
+		title="{/LastName}"
+		showNavButton="{device>/isPhone}"
+		navButtonPress="handleNavButtonPress" >
+		<footer>
+			<Toolbar>
+				<ToolbarSpacer/>
+				<Button
+			            text="Call"
+			            icon="sap-icon://outgoing-call"
+			            press="handleMemberCallButtonPress" />
+			     <Button
+			            text="Text"
+			            icon="sap-icon://discussion"
+			            press="handleMemberTextButtonPress" />
+				<Button
+					icon="sap-icon://email"
+					text="{i18n>MEMBER_MAIL_BUTTON_TEXT}"
+					press="handleMemberMailButtonPress" />
+			</Toolbar>
+		</footer>
+		<content>
+			<Toolbar>
+				<Title text="ID {ID}" level="H2"/>
+				<ToolbarSpacer />
+				<Link text="{i18n>FlipToResume}" tooltip="{i18n>FlipToResume.tooltip}" press="onShowResume" />
+			</Toolbar>
+			<ObjectHeader
+				title="{LastName}">
+				<attributes>
+					<ObjectAttribute
+						text="{Address}" />
+					<ObjectAttribute
+						text="{City}" /> 
+					<ObjectAttribute
+						text="{Zip}" />
+				</attributes>
+			</ObjectHeader>
+			<VBox alignItems="Center">
+				<Image
+					src= "{PictureUrl}"
+					decorative="true"
+					densityAware="false" />
+			</VBox>
+		</content>
+	</Page>
+</mvc:View>
