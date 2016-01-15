@@ -1,0 +1,81 @@
+<mvc:View controllerName="sap.ui.demo.mORMot.view.NewMember"
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:form="sap.ui.layout.form"
+	xmlns:h="http://www.w3.org/1999/xhtml">
+	<form:SimpleForm
+		id="newmemberform"
+		minWidth="600"
+		maxContainerCols="2"
+		editable="true"
+		layout="ResponsiveGridLayout" >
+		<Label
+			text="{i18n>FIRSTNAME}" />
+		<Input
+			id="inputFirstName"
+			type="Text"
+			placeholder="{i18n>FIRSTNAME}"
+			valueStateText="{i18n>MEMBER_NAME_ERROR}"
+			value="{
+				path : 'newUser>/FirstName' ,
+				type : 'sap.ui.model.type.String',
+				constraints : {minLength: 1, maxLength: 30}
+			}" />
+		<Label
+			text="{i18n>LASTNAME}" />
+		<Input
+			id="inputLastName"
+			type="Text"
+			placeholder="{i18n>LASTNAME}"
+			valueStateText="{i18n>MEMBER_NAME_ERROR}"
+			value="{
+				path : 'newUser>/LastName' ,
+				type : 'sap.ui.model.type.String',
+				constraints : {minLength: 1, maxLength: 30}
+			}" />
+		<Label
+			text="{i18n>PHONE}" />
+		<Input
+			id="inputPhone"
+			type="Text"
+			placeholder="{i18n>PHONE}"
+			value="{
+				path : 'newUser>/Phone' ,
+				type : 'sap.ui.model.type.String',
+				constraints : {
+					minLength: 1,
+					maxLength: 30
+				}
+			}" />
+		<Label
+			text="{i18n>EMAIL}" />
+		<Input
+			id="inputMail"
+			type="Email"
+			placeholder="{i18n>EMAIL}"
+			value="{
+				path : 'newUser>/Email',
+				type : 'sap.ui.model.type.String',
+				constraints : {
+					minLength: 1,
+					contains: '@'
+				}
+			}" />
+		<Label
+			text="{i18n>TEAM}" />
+		<Select
+			id="idSelectTeam"
+			items="{
+				path : '/Team',
+				sorter : {
+					path : 'Name',
+					descending : false
+				},
+				parameters : {select:'ID,Name'}					
+			}"
+			width="100%">
+			<core:Item key="{ID}" text="{Name}"/>
+		</Select>
+	</form:SimpleForm>
+</mvc:View>

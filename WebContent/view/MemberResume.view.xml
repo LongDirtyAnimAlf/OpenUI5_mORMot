@@ -25,7 +25,7 @@
 						<Text text="{Resume/Hobbies}" />
 					</IconTabFilter>
 					<IconTabFilter id="notesTab" text="{i18n>Notes}" key="Notes">
-						<Text text="{Resume/Notes}" />
+						<Text text="{Email}" />
 					</IconTabFilter>
 				</items>
 			</IconTabBar>

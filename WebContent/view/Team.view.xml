@@ -10,8 +10,32 @@
 		navButtonPress="handleNavButtonPress"
 		showFooter="{device>/isNoPhone}" >
 		<footer>
-			<Toolbar>
-			</Toolbar>
+		<Bar>
+        <contentLeft>
+          <Select
+            id="groupSelect"
+            change="onGroup"
+            icon="sap-icon://group-2"
+            type="IconOnly"
+            selectedKey="None"
+            autoAdjustWidth="true" >
+            <core:Item 
+                   key="None"
+                   text="{i18n>NONE}" />
+            <core:Item 
+                   key="LastName"
+                   text="{i18n>LASTNAME}" />
+          </Select>
+        </contentLeft>
+        <contentRight>
+          <Button
+            icon="sap-icon://add"
+            press="onAddUser" />
+          <Button
+            icon="sap-icon://add-contact"
+            press="onAddUserFloat" />
+        </contentRight>
+      	</Bar>
 		</footer>
 		<content>
 			<List

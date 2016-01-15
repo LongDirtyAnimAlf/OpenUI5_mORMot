@@ -64,7 +64,7 @@
     </Linking>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="3">
+    <Exceptions Count="5">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -74,6 +74,12 @@
       <Item3>
         <Name Value="EFOpenError"/>
       </Item3>
+      <Item4>
+        <Name Value="EHttpApiServer"/>
+      </Item4>
+      <Item5>
+        <Name Value="EHttpServerException"/>
+      </Item5>
     </Exceptions>
   </Debugging>
 </CONFIG>

@@ -63,13 +63,14 @@ Temporary Items
 *.classpath
 
 *.log
-
-*.db3
-
 backup/
 lib/
 lib*/
-mORMot-master/
+bin/
+exe/
+mORMot-master/*
+!mORMot-master/place_your_mormot_source_here.txt
 .settings/
 build/
 src/
+log/

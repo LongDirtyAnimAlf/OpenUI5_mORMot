@@ -1,0 +1,155 @@
+{
+	"_version": "1.1.0",
+	"sap.app": {
+		"_version": "1.1.0",
+		"id": "sap.ui.demo.mORMot",
+		"type": "application",
+		"i18n": "i18n/appTexts.properties",
+		"title": "{{appTitle}}",
+		"description": "{{appDescription}}",
+		"applicationVersion": {
+			"version": "1.0.0"
+		},
+		"ach": "CA-UI5-DOC"
+	},
+	"sap.ui": {
+		"_version": "1.1.0",
+		"technology": "UI5",
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		},
+		"supportedThemes": ["sap_hcb","sap_bluecrystal"],
+	 	"icons": {
+	 		"icon": "sap-icon://Fiori2/F0394",
+			"phone" : "img/57_iPhone_Desktop_Launch.png",
+			"phone@2" : "img/114_iPhone-Retina_Web_Clip.png",
+			"tablet" : "img/72_iPad_Desktop_Launch.png",
+			"tablet@2" : "img/144_iPad_Retina_Web_Clip.png",
+			"favicon" : "img/favicon.ico"
+	 	}	
+  	},
+	"sap.ui5": {
+		"_version": "1.1.0",
+		"rootView": "sap.ui.demo.mORMot.view.App",
+		"resources": {
+        	"js": [
+            	{
+                	"uri": "localService/BaseController.js",
+					"uri": "localService/tools.js"
+            	}
+        	],
+        	"css": [
+            	{
+                	"uri": "css/style.css"
+            	}
+        	]
+    	},		
+		"dependencies": {
+			"minUI5Version": "1.30",
+			"libs": {
+				"sap.m": { }
+			}
+		},
+		"models": {
+			"i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"settings": {
+					"bundleName": "sap.ui.demo.mORMot.i18n.i18n"
+				}
+			}
+		},
+		"routing": {
+			"config": {
+				"routerClass": "sap.m.routing.Router",
+				"viewType": "XML",
+				"viewPath": "sap.ui.demo.mORMot.view",
+				"controlId": "splitApp",
+				"controlAggregation": "pages",
+				"transition": "slide",
+				"bypassed": {
+					"target": ["home" , "notFound"]
+				}
+			},
+			"routes": [
+				{
+					"pattern": "",
+					"name": "home",
+					"target": "home"
+				},
+				{
+					"pattern": "Team/{TeamID}",
+					"name": "Team",
+					"target": "TeamView"
+				},
+				{
+					"pattern": "Team/{TeamID}/Member/{MemberID}",
+					"name": "Member",
+					"target": ["TeamView", "MemberView"]
+				},
+				{
+					"pattern": "Member/{MemberID}",
+					"name": "TeamMember",
+					"target": ["home" , "MemberView"]
+				},
+				{
+					"pattern": "Team/{TeamID}/Member/{MemberID}/resume",
+					"name": "MemberResume",
+					"target": ["TeamView", "MemberResume"]
+				},
+				{
+					"pattern": "Member/{MemberID}/resume",
+					"name": "TeamMemberResume",
+					"target": ["home", "MemberResume"]
+				},
+				{
+					"pattern": "Team/{TeamID}/AddUser",
+					"name": "AddUser",
+					"target": ["TeamView", "AddUser"]
+				}
+				
+			],
+			
+			"targets": {
+				"MemberView": {
+					"viewName": "Member",
+					"viewLevel": 3,
+					"controlAggregation": "detailPages"
+				},
+				"TeamView": {
+					"viewName": "Team",
+					"viewLevel": 2,
+					"controlAggregation": "masterPages"
+				},
+				"notFound": {
+					"viewName": "NotFound",
+					"viewLevel": 3,
+					"controlAggregation": "detailPages"
+				},
+				"welcome": {
+					"viewName": "Welcome",
+					"viewLevel": 0,
+					"controlAggregation": "detailPages"
+				},
+				"home": {
+					"viewName": "Home",
+					"viewLevel": 1,
+					"controlAggregation": "masterPages"
+				},
+				"MemberResume": {
+					"viewName": "MemberResume",
+					"viewLevel" : 4,
+					"transition": "flip",
+					"controlAggregation": "detailPages"
+				},
+				"AddUser": {
+					"viewName": "AddUser",
+					"viewLevel": 3,
+					"controlAggregation": "detailPages"
+				}
+			}
+			
+		}
+	}
+}

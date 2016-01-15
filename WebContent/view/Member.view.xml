@@ -7,25 +7,41 @@
 	xmlns:h="http://www.w3.org/1999/xhtml">
 	<Page
 		id="page"
-		title="{/LastName}"
+		title="{
+			parts:[
+            	{path:'FirstName'},
+                {path:'LastName'}
+            ]
+		}"
 		showNavButton="{device>/isPhone}"
 		navButtonPress="handleNavButtonPress" >
 		<footer>
-			<Toolbar>
-				<ToolbarSpacer/>
+			<Bar>
+				<contentLeft>
 				<Button
-			            text="Call"
-			            icon="sap-icon://outgoing-call"
-			            press="handleMemberCallButtonPress" />
+			         text="Call"
+			         icon="sap-icon://outgoing-call"
+			         press="handleMemberCallButtonPress" />
 			     <Button
-			            text="Text"
-			            icon="sap-icon://discussion"
-			            press="handleMemberTextButtonPress" />
+			         text="Text"
+			         icon="sap-icon://discussion"
+			         press="handleMemberTextButtonPress" />
 				<Button
 					icon="sap-icon://email"
 					text="{i18n>MEMBER_MAIL_BUTTON_TEXT}"
 					press="handleMemberMailButtonPress" />
-			</Toolbar>
+				</contentLeft>					
+				<contentRight>
+          			<Button 
+            			text="Update"
+            			type="Emphasized"
+            			press="onUpdate" />
+          			<Button
+            			text="Delete"
+            			type="Reject"
+            			press="onDelete" />
+        		</contentRight>
+			</Bar>
 		</footer>
 		<content>
 			<Toolbar>
@@ -37,6 +53,7 @@
 				title="{LastName}">
 				<attributes>
 					<ObjectAttribute
+						id = "Address"
 						text="{Address}" />
 					<ObjectAttribute
 						text="{City}" /> 

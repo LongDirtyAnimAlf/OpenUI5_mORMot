@@ -22,7 +22,6 @@ sap.ui.define([
 			var sPath = "/Member/"+sId;
 			var oData = oModel.getData(sPath);
 			
-			//oView.objectBindings({			
 			oView.bindElement({
 				path: sPath,
 				events: {
@@ -33,6 +32,7 @@ sap.ui.define([
 						oView.setBusy(false);
 					}
 				}
+				,parameters : {select:'ID,FirstName,LastName,Address,Zip,City,PictureUrl,Phone,Email',key:'ID'}
 			});
 			
 			//if there is no data the model has to request new data
@@ -75,17 +75,78 @@ sap.ui.define([
 
 		handleMemberCallButtonPress: function() {
 			var oData = this.getView().getBindingContext().getProperty();
-			sap.m.URLHelper.triggerTel(oData.Phone);
+			if (oData.Phone) {			
+				sap.m.URLHelper.triggerTel(oData.Phone);
+			}
 		},
 
 		handleMemberTextButtonPress: function() {
 			var oData = this.getView().getBindingContext().getProperty();
-			sap.m.URLHelper.triggerSms(oData.Phone);
+			if (oData.Phone) {
+				sap.m.URLHelper.triggerSms(oData.Phone);
+			}
 		},
 
 		handleMemberMailButtonPress: function() {
 			var oData = this.getView().getBindingContext().getProperty();
-			sap.m.URLHelper.triggerEmail(oData.Email);
+			if (oData.Email) {
+				sap.m.URLHelper.triggerEmail(oData.Email);				
+			}
+		},
+		
+		onUpdate: function() {
+			var oView = this.getView();
+			var oBinding = oView.getBindingContext();
+			var oProperty = oBinding.getProperty();
+			var sPath = oBinding.getPath();
+			var oModel = oView.getModel();
+
+			var mUserData = {};
+			// make a copy of the original ... not really needed ...
+			//var mUserData = jQuery.extend(true, {}, oProperty);
+			
+			mUserData.Email = "iamhappy@gmail.com";
+			
+			mUserData.Country = sPath;
+
+			//mUserData.ID = oProperty.ID;
+			//mUserData.Email = oView.byId("Email").getValue();
+			//mUserData.FirstName = oView.byId("FirstName").getValue();
+			//mUserData.LastName = oView.byId("LastName").getValue();
+			//mUserData.Phone = oView.byId("Phone").getValue();
+			//mUserData.Address = oView.byId("Address").getValue();			
+
+		    oModel.update(sPath, mUserData, {
+		      success: jQuery.proxy(function(mResponse) {
+		    	  sap.m.MessageToast.show("Update success !!");
+		    	  //oModel.refresh();
+		    	  oView.getElementBinding().refresh();		    	  
+		      }, this),
+		      error: jQuery.proxy(function() {
+		        alert("Problem updating user");
+		      }, this)
+		    });			
+		},
+		
+		onDelete: function() {
+			var oView = this.getView();
+			var oBinding = oView.getBindingContext();
+			var sPath = oBinding.getPath();
+			var oModel = oView.getModel();
+			var that = this;
+
+			oModel.remove(sPath, {
+				success: function() {
+					sap.m.MessageToast.show("Delete successfull");
+					//that.handleNavButtonPress;
+					oModel.refresh();
+					//oView.getElementBinding().refresh();				
+					//oView.getElementBinding().refresh();				
+				},
+				error: function() {
+					alert("Delete failed");
+				}
+			});
 		}
 	});
 });

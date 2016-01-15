@@ -1,0 +1,74 @@
+<mvc:View
+  controllerName="sap.ui.demo.mORMot.view.AddUser"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:c="sap.ui.core"  
+  xmlns:l="sap.ui.layout"
+  xmlns:f="sap.ui.layout.form">
+  <Page
+	showNavButton="true"
+	navButtonPress="handleNavButtonPress"  
+    title="{i18n>MEMBER_ADD_PAGE_TITLE}">
+    <l:Grid
+      defaultSpan="L12 M12 S12"
+      width="auto">
+      <l:content>
+        <f:SimpleForm
+          id="idAddUserForm"
+          minWidth="800"
+          maxContainerCols="2"
+          editable="true"
+          layout="ResponsiveGridLayout"
+          title="{i18n>MEMBER_ADD_FORM_TITLE}"
+          labelSpanL="3"
+          labelSpanM="3"
+          emptySpanL="4"
+          emptySpanM="4"
+          columnsL="1"
+          columnsM="1"
+          class="editableForm">
+          <f:content>
+          	<c:Title text="{i18n>MEMBER_ADD_TITLE}" />
+            <Label text="{i18n>FIRSTNAME}" />
+            <Input value="{newUser>/FirstName}" />
+            <Label text="{i18n>LASTNAME}" />
+            <Input value="{newUser>/LastName}" />
+            <Label text="{i18n>PHONE}" />
+            <Input value="{newUser>/Phone}" />
+            <Label text="{i18n>EMAIL}" />
+            <Input value="{newUser>/Email}" />
+			<!-- Team -->
+			<c:Title text="{i18n>ADD_TEAM_TITLE}" />
+			<Label text="{i18n>ADD_TEAM_LABLE}" />
+			<Select
+				id="idSelectTeam"
+				items="{
+					path : '/Team',
+					sorter : {
+						path : 'Name',
+						descending : false
+					},
+					parameters : {select:'ID,Name'}					
+				}"
+				width="100%">
+				<c:Item key="{ID}" text="{Name}"/>
+			</Select>
+          </f:content>
+        </f:SimpleForm>
+      </l:content>
+    </l:Grid>
+    <footer>
+      <Bar>
+        <contentRight>
+          <Button 
+            text="{i18n>SAVE_BUTTON_TEXT}"
+            type="Emphasized"
+            press="onSave" />
+          <Button
+            text="{i18n>CANCEL_BUTTON_TEXT}"
+            press="onCancel" />
+        </contentRight>
+      </Bar>
+    </footer>
+  </Page>
+</mvc:View>

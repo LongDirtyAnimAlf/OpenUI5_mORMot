@@ -102,18 +102,24 @@ begin
   with TSQLLog.Family do begin
     Level := [sllError, sllDebug, sllSQL, sllCache, sllResult, sllDB, sllHTTP, sllClient, sllServer];
     LevelStackTrace:=[sllNone];
-    //DestinationPath := 'log'+PathDelim;
-    //if not FileExists(DestinationPath) then  CreateDir(DestinationPath);
-    NoFile := true;
+    DestinationPath := 'log'+PathDelim;
+    if not FileExists(DestinationPath) then  CreateDir(DestinationPath);
+    //NoFile := true;
     EchoCustom := OnLogEvent;
   end;
 
   Model := CreateSampleModel;
   DB := TSQLRestServerDB.Create(Model,ChangeFileExt(ExeVersion.ProgramFileName,'.db3'),false);
   DB.CreateMissingTables;
+  DB.Html200WithNoBodyReturns204:=True;
+
+  //DB.URIPagingParameters.SendTotalRowsCountFmt := ',"_next":%';
+  //DB.URIPagingParameters.Select := '$select';
+  //DB.NoAJAXJSON := false;
 
   Server := TCustomHttpServer.Create(PORT,[DB],'+',HTTP_DEFAULT_MODE,32,secNone,STATICROOT);
   Server.AccessControlAllowOrigin := '*'; // allow cross-site AJAX queries
+
 
   ServerRoot:=ExtractFilePath(ParamStr(0))+WEBROOT;
 
@@ -146,6 +152,7 @@ var
   FileName: TFileName;
   FN: RawUTF8;
   x:integer;
+  aUserAgent: RawUTF8;
 begin
   FN:='/'+UpperCase(STATICROOT)+'/';
 
@@ -190,6 +197,13 @@ begin
   end else
     // call the associated TSQLRestServer instance(s)
     result := inherited Request(Ctxt);
+
+    aUserAgent:=FindIniNameValue(pointer(Ctxt.InHeaders),'USER-AGENT: ');
+    //
+    TSQLLog.Add.Log(sllHTTP,'User agent: '+aUserAgent);
+
+    //if (Length(aUserAgent)>0) AND (PosEx('mORMot',aUserAgent)=0) then
+    //   Ctxt.OutContent := '{"results":'+Ctxt.OutContent+'}';
 end;
 
 end.

@@ -14,7 +14,7 @@ sap.ui.define([
 			var sId = Number(oEvent.getParameter("arguments").MemberID);			
 			var sPath = "/Member/" + sId;
 			var oData = oModel.getData(sPath);
-			
+
 			oView.bindElement({
 				path : sPath,
 				events : {
@@ -23,7 +23,8 @@ sap.ui.define([
 					},
 					dataReceived: function (oEvent) {
 						oView.setBusy(false);
-					}
+					},
+					parameters : {select:'ID,Resume',key:'ID'}
 				}
 			});
 			

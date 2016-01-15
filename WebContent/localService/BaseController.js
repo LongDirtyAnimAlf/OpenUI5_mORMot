@@ -26,7 +26,5 @@ sap.ui.define([
 				this._router().navTo("home", {}, true /*no history*/);
 			}
 		}
-
 	});
-
 });

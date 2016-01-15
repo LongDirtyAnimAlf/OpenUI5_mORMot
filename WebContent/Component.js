@@ -4,7 +4,7 @@ sap.ui.define([
 	'sap/ui/model/resource/ResourceModel',
 	'sap/ui/model/json/JSONModel',
     'sap/ui/demo/mORMot/model/Config',
-	'sap/ui/demo/mORMot/localService/mORMot/mORMotModel'    
+	'sap/ui/demo/mORMot/localService/RestModel/RestModel'
 ], function (UIComponent,
 			Router,
 			ResourceModel,
@@ -12,89 +12,11 @@ sap.ui.define([
 			mORMotModel) {
 
 	return UIComponent.extend("sap.ui.demo.mORMot.Component", {
-
+		
 		metadata: {
-			includes : ["css/style.css"],
-			routing: {
-				config: {
-					routerClass: Router,
-					viewType: "XML",
-					viewPath: "sap.ui.demo.mORMot.view",
-					controlId: "splitApp",
-					transition: "slide",
-					bypassed: {
-						target: ["home" , "notFound"]
-					}
-				},
-				routes: [
-					{
-						pattern: "",
-						name: "home",
-						target: "home"
-					},
-					{
-						pattern: "Team/{TeamID}",
-						name: "Team",
-						target: "TeamView"
-					},
-					{
-						pattern: "Team/{TeamID}/Member/{MemberID}",
-						name: "Member",
-						target: ["TeamView", "MemberView"]
-					},
-					{
-						pattern: "Member/{MemberID}",
-						name: "TeamMember",
-						target: ["home" , "MemberView"]
-					},
-					{
-						pattern: "Team/{TeamID}/Member/{MemberID}/resume",
-						name: "MemberResume",
-						target: ["TeamView", "MemberResume"]							
-					},
-					{
-						pattern: "Member/{MemberID}/resume",
-						name: "TeamMemberResume",
-						target: ["home", "MemberResume"]
-					}
-					
-				],
-				targets: {
-					MemberView: {
-						viewName: "Member",
-						viewLevel: 3,
-						controlAggregation: "detailPages"
-					},
-					TeamView: {
-						viewName: "Team",
-						viewLevel: 2,
-						controlAggregation: "masterPages"
-					},
-					notFound: {
-						viewName: "NotFound",
-						viewLevel: 3,
-						controlAggregation: "detailPages"
-					},
-					welcome: {
-						viewName: "Welcome",
-						viewLevel: 0,
-						controlAggregation: "detailPages"
-					},
-					home: {
-						viewName: "Home",
-						viewLevel: 1,
-						controlAggregation: "masterPages"
-					},
-					MemberResume: {
-						viewName: "MemberResume",
-						viewLevel : 4,
-						transition: "flip",
-						controlAggregation: "detailPages"							
-					}
-				}
-			}
-		},
-
+            manifest: "json"
+        },
+		
 		init: function () {
 			// call overwritten init (calls createContent)
 			UIComponent.prototype.init.apply(this, arguments);
@@ -105,7 +27,9 @@ sap.ui.define([
 			});
 			this.setModel(oI18nModel, "i18n");
 
-			var oModel = new sap.ui.model.mORMot.mORMotModel(model.Config.getServiceUrl("/root/"));
+			var oModel = new sap.ui.model.rest.RestModel(model.Config.getServiceUrl("/root/"));
+			oModel.setKey("ID");
+			oModel.setmORMotRootResponse(true);
 
 			this.setModel(oModel);
 
