@@ -19,16 +19,16 @@
 			<Bar>
 				<contentLeft>
 				<Button
-			         text="Call"
+			         text="{i18n>CALL_BUTTON_TEXT}"
 			         icon="sap-icon://outgoing-call"
 			         press="handleMemberCallButtonPress" />
 			     <Button
-			         text="Text"
+			         text="{i18n>TEXT_BUTTON_TEXT}"
 			         icon="sap-icon://discussion"
 			         press="handleMemberTextButtonPress" />
 				<Button
 					icon="sap-icon://email"
-					text="{i18n>MEMBER_MAIL_BUTTON_TEXT}"
+					text="{i18n>MAIL_BUTTON_TEXT}"
 					press="handleMemberMailButtonPress" />
 				</contentLeft>					
 				<contentRight>
