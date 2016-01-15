@@ -14,7 +14,7 @@
             ]
 		}"
 		showNavButton="{device>/isPhone}"
-		navButtonPress="handleNavButtonPress" >
+		navButtonPress="handleNavButtonPress">
 		<footer>
 			<Bar>
 				<contentLeft>
@@ -35,10 +35,12 @@
           			<Button 
             			text="Update"
             			type="Emphasized"
+            			visible="{device>/isNoPhone}"
             			press="onUpdate" />
           			<Button
             			text="Delete"
             			type="Reject"
+            			visible="{device>/isNoPhone}"            			
             			press="onDelete" />
         		</contentRight>
 			</Bar>
