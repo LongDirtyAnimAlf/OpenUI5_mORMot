@@ -21,10 +21,12 @@
 				<Button
 			         text="{i18n>CALL_BUTTON_TEXT}"
 			         icon="sap-icon://outgoing-call"
+					 visible="{device>/isPhone}"			         
 			         press="handleMemberCallButtonPress" />
 			     <Button
 			         text="{i18n>TEXT_BUTTON_TEXT}"
 			         icon="sap-icon://discussion"
+			         visible="{device>/isPhone}"
 			         press="handleMemberTextButtonPress" />
 				<Button
 					icon="sap-icon://email"

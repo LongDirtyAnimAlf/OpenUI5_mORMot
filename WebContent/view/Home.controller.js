@@ -3,12 +3,16 @@ sap.ui.define([
 	'sap/ui/demo/mORMot/model/formatter',
 	'sap/ui/model/Filter',
 	'sap/ui/model/FilterOperator',
-	'sap/ui/model/Sorter'
+	'sap/ui/model/Sorter',
+	'sap/m/Dialog',
+	'sap/m/Button'
 ], function (BaseController,
 			 formatter,
 			 Filter,
 			 FilterOperator,
-			 Sorter) {
+			 Sorter,
+			 Dialog,
+			 Button) {
 	"use strict";
 
 	var oFirstNameSorter = new sap.ui.model.Sorter("FirstName", false, function (oContext) {
@@ -76,15 +80,20 @@ sap.ui.define([
 			var oView = this.getView();
 			var oMemberList = oView.byId("MemberList");
 			var oTeamList = oView.byId("TeamList");
-			var oToolbar = oView.byId("SearchButtonsToolbar");
+			var oSortFirstNameButton = oView.byId("SortFirstNameButton");
+			var oSortLastNameButton = oView.byId("SortLastNameButton");
+			var oAddTeamButton = oView.byId("AddTeamButton");			
 			
 			var oSearchFieldValue = ( sQuery || oView.byId("searchField").getValue());			
 
-			// switch visibility of lists
+			// switch visibility of lists and buttons
+			
 			var bShowSearch = oSearchFieldValue.length !== 0;
 			oMemberList.toggleStyleClass("invisible", !bShowSearch);
-			oToolbar.toggleStyleClass("invisible", !bShowSearch);			
 			oTeamList.toggleStyleClass("invisible", bShowSearch);
+			oSortFirstNameButton.toggleStyleClass("invisible", !bShowSearch);
+			oSortLastNameButton.toggleStyleClass("invisible", !bShowSearch);			
+			oAddTeamButton.toggleStyleClass("invisible", bShowSearch);			
 
 			if (bShowSearch) {
 				this._changeNoDataTextToIndicateLoading(oMemberList);
@@ -154,6 +163,63 @@ sap.ui.define([
 			var oBindContext = oItem.getBindingContext();
 			var sId = oBindContext.getProperty(oBindContext.getPath()).ID;			
 			this._router().navTo("TeamMember", {MemberID: sId}, !sap.ui.Device.system.phone);
+		},
+		
+		onAddTeamFloat: function (oEvent) {
+			var that = this;
+			if (!this._NewTeamDialog) {
+
+				var oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();				
+				
+				// create new team dialog
+				var oInputTeamView = sap.ui.view({
+					id: "NewTeam",
+					viewName: "sap.ui.demo.mORMot.view.NewTeam",
+					type: "XML"
+				});
+				this._NewTeamDialog = new Dialog({
+					title: oBundle.getText("TEAM_ADD_PAGE_TITLE"),
+					stretch: "{device>/isPhone}",
+					content: [
+						oInputTeamView
+					],
+					leftButton: new Button({
+						text: oBundle.getText("SAVE_BUTTON_TEXT"),
+						type: "Accept",
+						press: function () {
+							var bInputValid = oInputTeamView.getController()._checkInput();
+							if (bInputValid) {
+								var oModel = that.getOwnerComponent().getModel();
+								var mData = oInputTeamView.getModel("newTeam").getData();
+								var mNewTeam = {
+										"Name": mData.Name
+								};
+								oModel.create("/Team", mNewTeam, {
+									success: function() {
+										that._NewTeamDialog.close();
+										sap.m.MessageToast.show(oBundle.getText("ADD_TEAM_SUCCESS_TEXT"));								
+									},
+									error: function() {
+										alert(oBundle.getText("ADD_TEAM_FAILURE_TEXT"));
+									}
+								});
+							}
+						}
+					}),
+					rightButton: new Button({
+						text: oBundle.getText("CANCEL_BUTTON_TEXT"),
+						press: function () {
+							that._NewTeamDialog.close();
+						}
+					})
+				});
+
+				this.getView().addDependent(this._NewTeamDialog);
+			}
+
+			// open new member dialog
+			this._NewTeamDialog.open();
 		}
+		
 	});
 });

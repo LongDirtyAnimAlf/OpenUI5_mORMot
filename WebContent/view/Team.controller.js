@@ -112,7 +112,7 @@ sap.ui.define([
 				});
 				this._NewMemberDialog = new Dialog({
 					title: oBundle.getText("MEMBER_ADD_PAGE_TITLE"),
-					stretch: Device.system.phone,
+					stretch: "{device>/isPhone}",
 					content: [
 						oInputView
 					],

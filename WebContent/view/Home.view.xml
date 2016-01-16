@@ -6,7 +6,7 @@
 	<Page
 		id="page"
 		title="{i18n>HOME_TITLE}"
-		showFooter="{device>/isNoPhone}" >
+		showFooter="{device>/isNoPhone}">
 		<subHeader>
 			<Toolbar id="searchBar">
 				<SearchField
@@ -31,6 +31,12 @@
 					id="SortLastNameButton" 
 					text="{i18n>MEMBER_SORTLASTNAME_BUTTON_TEXT}"
 					press="handleMemberSortLastNameButtonPress" />
+          		<Button
+            		icon="sap-icon://add"
+					id="AddTeamButton"
+					text="{i18n>TEAM_ADD_FORM_TITLE}" 
+					tooltip="{i18n>TEAM_ADD_PAGE_TITLE}"           		
+            		press="onAddTeamFloat" />
 			</Toolbar>
 		</footer>
 		<content>

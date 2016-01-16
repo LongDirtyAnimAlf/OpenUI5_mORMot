@@ -1,0 +1,26 @@
+<mvc:View controllerName="sap.ui.demo.mORMot.view.NewTeam"
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:form="sap.ui.layout.form"
+	xmlns:h="http://www.w3.org/1999/xhtml">
+	<form:SimpleForm
+		id="newteamform"
+		minWidth="600"
+		maxContainerCols="2"
+		editable="true"
+		layout="ResponsiveGridLayout" >
+		<Label
+			text="{i18n>TEAMNAME}" />
+		<Input
+			id="inputName"
+			type="Text"
+			placeholder="{i18n>TEAMNAME}"
+			valueStateText="{i18n>TEAM_NAME_ERROR}"
+			value="{
+				path : 'newTeam>/Name' ,
+				type : 'sap.ui.model.type.String',
+				constraints : {minLength: 1, maxLength: 30}
+			}" />
+	</form:SimpleForm>
+</mvc:View>
