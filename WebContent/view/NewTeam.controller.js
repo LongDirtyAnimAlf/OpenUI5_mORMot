@@ -28,9 +28,7 @@ sap.ui.controller("sap.ui.demo.mORMot.view.NewTeam", {
 		var oView = this.getView();
 		var oInput = oView.byId("inputName");
 		
-		if (!oInput.getValue()) {
-				oInput.setValueState(sap.ui.core.ValueState.Error);
-		}
+		oInput.getValue() ? oInput.setValueState(sap.ui.core.ValueState.None) : oInput.setValueState(sap.ui.core.ValueState.Error);
 
 		if (oInput.getValueState() === sap.ui.core.ValueState.Error) {
 			return false;

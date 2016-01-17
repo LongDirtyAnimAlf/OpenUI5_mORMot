@@ -35,9 +35,7 @@ sap.ui.controller("sap.ui.demo.mORMot.view.NewMember", {
 		// (this is not done by data binding validation
 		//  as data binding only runs on changing values)
 		jQuery.each(aInputs, function (i, oInput) {
-			if (!oInput.getValue()) {
-				oInput.setValueState(sap.ui.core.ValueState.Error);
-			}
+			oInput.getValue() ? oInput.setValueState(sap.ui.core.ValueState.None) : oInput.setValueState(sap.ui.core.ValueState.Error);			
 		});
 
 		// check that all fields are ok

@@ -5,8 +5,7 @@
 	xmlns:h="http://www.w3.org/1999/xhtml">
 	<Page
 		id="page"
-		title="{i18n>HOME_TITLE}"
-		showFooter="{device>/isNoPhone}">
+		title="{i18n>HOME_TITLE}">
 		<subHeader>
 			<Toolbar id="searchBar">
 				<SearchField
