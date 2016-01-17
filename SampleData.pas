@@ -22,7 +22,7 @@ type
     class procedure InitializeTable(Server: TSQLRestServer; const FieldName: RawUTF8;
       Options: TSQLInitializeTableOptions); override;
   published
-    property Name: RawUTF8 read fName write fName;
+    property Name: RawUTF8 read fName write fName stored AS_UNIQUE;
   end;
 
 
@@ -64,6 +64,7 @@ type
     fFirstName: RawUTF8;
     fMiddleName: RawUTF8;
     fLastName: RawUTF8;
+    fLogonName: RawUTF8;
     fAddress: RawUTF8;
     fAddress2: RawUTF8;
     fNewAddress: TAddress;
@@ -90,17 +91,18 @@ type
     constructor Create; override;
     destructor Destroy; override;
   published
-    property FirstName: RawUTF8 read fFirstName write fFirstName;
-    property MiddleName: RawUTF8 read fMiddleName write fMiddleName;
-    property LastName: RawUTF8 read fLastName write fLastName;
+    property FirstName: RawUTF8 index 30 read fFirstName write fFirstName;
+    property MiddleName: RawUTF8 index 20 read fMiddleName write fMiddleName;
+    property LastName: RawUTF8 index 50 read fLastName write fLastName;
+    property LogonName: RawUTF8 index 30 read fLogonName write fLogonName stored AS_UNIQUE;
     property Address: RawUTF8 read fAddress write fAddress;
     property Address2: RawUTF8 read fAddress2 write fAddress2;
     property NewAddress: TAddress read fNewAddress write fNewAddress;
     property City: RawUTF8 read fCity write fCity;
     property State: RawUTF8 read fState write fState;
     property Zip: RawUTF8 read fZip write fZip;
-    property Country: RawUTF8 read fCountry write fCountry;
-    property Phone: RawUTF8 read fPhone write fPhone;
+    property Country: RawUTF8 index 30 read fCountry write fCountry;
+    property Phone: RawUTF8 index 20 read fPhone write fPhone;
     property Dob: RawUTF8 read fDob write fDob;
     property Email: RawUTF8 read fEmail write fEmail;
     property Skype: RawUTF8 read fSkype write fSkype;
@@ -207,6 +209,7 @@ begin
       aMember.NewEmail.Add('jd@doe.com');
       aMember.PictureUrl:='img/john.jpg';
       aMember.MemberTeam:=TSQLTeam(1);
+      aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
       Server.Add(aMember,true);
 
       aMember.NewAddress.Clear;
@@ -217,6 +220,7 @@ begin
       aMember.Email:='webcontact01@synopse.info';
       aMember.PictureUrl:='img/arnaud.jpg';
       aMember.MemberTeam:=TSQLTeam(1);
+      aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
       Server.Add(aMember,true);
 
       aMember.FirstName:='Don';
@@ -225,6 +229,7 @@ begin
       aMember.Email:='longdirtyanimalf@gmail.com';
       aMember.PictureUrl:='img/don.jpg';
       aMember.MemberTeam:=TSQLTeam(2);
+      aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
       Server.Add(aMember,true);
 
     finally

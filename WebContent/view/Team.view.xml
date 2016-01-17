@@ -17,6 +17,7 @@
             			icon="sap-icon://group-2"
             			type="IconOnly"
             			selectedKey="None"
+            			visible="false"
             			autoAdjustWidth="true" >
             			<core:Item 
                    			key="None"

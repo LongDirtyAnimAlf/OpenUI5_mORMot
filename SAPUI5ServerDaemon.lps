@@ -8,8 +8,7 @@
       <Unit0>
         <Filename Value="SAPUI5ServerDaemon.dpr"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <CursorPos Y="10"/>
+        <CursorPos X="22" Y="3"/>
         <UsageCount Value="22"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -28,7 +27,10 @@
       </Unit2>
       <Unit3>
         <Filename Value="SampleData.pas"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
+        <TopLine Value="47"/>
+        <CursorPos X="5" Y="67"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -42,7 +44,7 @@
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
     </Units>
-    <JumpHistory Count="3" HistoryIndex="2">
+    <JumpHistory Count="4" HistoryIndex="3">
       <Position1>
         <Filename Value="SampleData.pas"/>
         <Caret Column="31"/>
@@ -55,6 +57,9 @@
         <Filename Value="SAPUI5ServerDaemon.dpr"/>
         <Caret Line="77" TopLine="42"/>
       </Position3>
+      <Position4>
+        <Filename Value="SampleData.pas"/>
+      </Position4>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>
