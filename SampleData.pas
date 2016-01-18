@@ -7,7 +7,7 @@ uses
   mORMot;
 
 const
-  WEBROOT='WebContent';
+  WEBROOT='webcontent';
   STATICROOT='static';
   INDEXFILE='index.html';
   HOST='localhost';

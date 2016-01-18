@@ -121,6 +121,7 @@ sap.ui.define([
 						type: "Accept",
 						press: function () {
 							var bInputValid = oInputView.getController()._checkInput();
+							console.log("gdfgsdfgsdfg");
 							if (bInputValid) {
 								var oModel = that.getOwnerComponent().getModel();
 								var mData = oInputView.getModel("newUser").getData();

@@ -11,6 +11,8 @@ program SAPUI5ServerDaemon;
 {$ENDIF}
 {$ENDIF}
 
+{$define INCLUDESTATICSERVER}
+
 uses
   {$ifdef Linux}
   cthreads,
@@ -19,11 +21,23 @@ uses
   SysUtils,
   SynCommons, mORMot, SynLog,
   mORMotSQLite3, SynSQLite3Static,
-  mORMotHttpServer,// SynCrtSock,
+  mORMotHttpServer,
+  {$ifdef INCLUDESTATICSERVER}
+  SynCrtSock,
+  {$endif}
   SampleData,
   daemonapp;
 
 Type
+  {$ifdef INCLUDESTATICSERVER}
+  TCustomHttpServer = class(TSQLHttpServer)
+  protected
+    function Request(Ctxt: THttpServerRequest): cardinal; override;
+  public
+    ServerRoot:string;
+  end;
+  {$endif}
+
   { TTestDaemon }
 
   TTestDaemon = Class(TCustomDaemon)
@@ -46,6 +60,71 @@ Procedure AWriteln(MSg : String; B : Boolean);
 begin
   Application.Log(etcustom,Msg+BoolToStr(B));
 end;
+
+{ TCustomHttpServer }
+
+function TCustomHttpServer.Request(Ctxt: THttpServerRequest): cardinal;
+var
+  FileName: TFileName;
+  FN: RawUTF8;
+  x:integer;
+  aUserAgent: RawUTF8;
+begin
+  FN:='/'+UpperCase(STATICROOT)+'/';
+
+  TSQLLog.Add.Log(sllHTTP,'Got URL request: '+Ctxt.URL);
+
+  if (Ctxt.Method='GET')
+     AND
+     (IdemPChar(pointer(Ctxt.URL),pointer(FN)))
+     then
+  begin
+
+      TSQLLog.Add.Log(sllHTTP,'Serving local static contents');
+
+      FN := UrlDecode(copy(Ctxt.URL,Length(STATICROOT)+3,maxInt));
+
+      if (DirectorySeparator<>'/')
+         then FN := StringReplaceChars(FN,'/',DirectorySeparator);
+
+      // safety first: no deep directories !!
+      if PosEx('..',FN)>0 then
+      begin
+         result := 404;
+        exit;
+      end;
+
+      while (FN<>'') and (FN[1]=DirectorySeparator) do delete(FN,1,1);
+
+      x:=Pos('?',FN);
+      if x>0 then delete(FN,x,maxInt);
+
+      while (FN<>'') and (FN[length(FN)]=DirectorySeparator) do delete(FN,length(FN),1);
+
+      FileName := IncludeTrailingPathDelimiter(ServerRoot)+UTF8ToString(FN);
+
+      if DirectoryExists(FileName) then result := 404 else
+      begin
+        TSQLLog.Add.Log(sllHTTP,'Serving local file: '+FileName);
+        Ctxt.OutContent := StringToUTF8(FileName);
+        Ctxt.OutContentType := HTTP_RESP_STATICFILE;
+        Ctxt.OutCustomHeaders := GetMimeContentTypeHeader('',FileName);
+        result := 200;
+      end;
+
+  end else
+    // call the associated TSQLRestServer instance(s)
+    result := inherited Request(Ctxt);
+
+    //aUserAgent:=FindIniNameValue(pointer(Ctxt.InHeaders),'USER-AGENT: ');
+    //
+    //TSQLLog.Add.Log(sllHTTP,'User agent: '+aUserAgent);
+
+    //if (Length(aUserAgent)>0) AND (PosEx('mORMot',aUserAgent)=0) then
+    //   Ctxt.OutContent := '{"results":'+Ctxt.OutContent+'}';
+end;
+
+
 
 { TTestDaemon }
 
@@ -79,7 +158,14 @@ begin
   DB.Html200WithNoBodyReturns204:=True;
   TSQLLog.Add.Log(sllInfo,'Database started !!');
 
+  {$ifdef INCLUDESTATICSERVER}
+  Server := TCustomHttpServer.Create(PORT,[DB],'+',HTTP_DEFAULT_MODE,32,secNone,STATICROOT);
+  TCustomHttpServer(Server).ServerRoot:=ExtractFilePath(ParamStr(0))+WEBROOT;
+  if NOT DirectoryExists(TCustomHttpServer(Server).ServerRoot) then
+     TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(ParamStr(0));
+  {$else}
   Server := TSQLHttpServer.Create(PORT,DB);
+  {$endif}
   Server.AccessControlAllowOrigin := '*'; // allow cross-site AJAX queries
   TSQLLog.Add.Log(sllInfo,'Webserver started !!');
   TSQLLog.Add.Log(sllInfo,'Webserver listening on '+PORT);

@@ -4,11 +4,13 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="5">
+    <Units Count="6">
       <Unit0>
         <Filename Value="SAPUI5ServerDaemon.dpr"/>
         <IsPartOfProject Value="True"/>
-        <CursorPos X="22" Y="3"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="75"/>
+        <CursorPos X="42" Y="88"/>
         <UsageCount Value="22"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -27,10 +29,8 @@
       </Unit2>
       <Unit3>
         <Filename Value="SampleData.pas"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="47"/>
-        <CursorPos X="5" Y="67"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="3" Y="11"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -43,8 +43,17 @@
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="mORMot-master\SynCommons.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="2681"/>
+        <CursorPos X="10" Y="2699"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit5>
     </Units>
-    <JumpHistory Count="4" HistoryIndex="3">
+    <JumpHistory Count="12" HistoryIndex="11">
       <Position1>
         <Filename Value="SampleData.pas"/>
         <Caret Column="31"/>
@@ -60,6 +69,38 @@
       <Position4>
         <Filename Value="SampleData.pas"/>
       </Position4>
+      <Position5>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="89" Column="5" TopLine="66"/>
+      </Position5>
+      <Position6>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="22" Column="20" TopLine="12"/>
+      </Position6>
+      <Position7>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="100" TopLine="78"/>
+      </Position7>
+      <Position8>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="104" TopLine="83"/>
+      </Position8>
+      <Position9>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="100" Column="32" TopLine="82"/>
+      </Position9>
+      <Position10>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="35" Column="14" TopLine="18"/>
+      </Position10>
+      <Position11>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="86" Column="74" TopLine="74"/>
+      </Position11>
+      <Position12>
+        <Filename Value="SAPUI5ServerDaemon.dpr"/>
+        <Caret Line="79" Column="12" TopLine="65"/>
+      </Position12>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>
