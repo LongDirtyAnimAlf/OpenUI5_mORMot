@@ -101,6 +101,22 @@ sap.ui.define([
 			var sPath = oBinding.getPath();
 			var oModel = oView.getModel();
 
+			console.log(oModel);
+
+			/*
+			// Does already work !!!
+			// But disable for now ... more tests needed. 			
+			//oModel.submitChanges();
+			oModel.submitChanges({ 
+                success : function(oData) {
+                    console.log("submitChangesSuccess", oData);
+                },
+                error : function(oError) {
+                    console.log("submitChangesError", oError);
+                }
+            });
+			*/
+			
 			var mUserData = {};
 			// make a copy of the original ... not really needed ...
 			//var mUserData = jQuery.extend(true, {}, oProperty);
@@ -109,7 +125,6 @@ sap.ui.define([
 			
 			mUserData.Country = sPath;
 
-			//mUserData.ID = oProperty.ID;
 			//mUserData.Email = oView.byId("Email").getValue();
 			//mUserData.FirstName = oView.byId("FirstName").getValue();
 			//mUserData.LastName = oView.byId("LastName").getValue();
@@ -125,7 +140,7 @@ sap.ui.define([
 		      error: jQuery.proxy(function() {
 		        alert("Problem updating user");
 		      }, this)
-		    });			
+		    });
 		},
 		
 		onDelete: function() {

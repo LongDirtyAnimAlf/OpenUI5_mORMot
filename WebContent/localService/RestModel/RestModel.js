@@ -83,25 +83,6 @@ sap.ui.define([
 				} 					
 			);
 
-			// dummy values for the metadata object ... needed !!!
-			this.oMetadata.oMetadata = {version : "0.0"};
-			this.oMetadata.oMetadata.dataServices = {
-					dataServiceVersion: "0.0",
-					schema : [{
-						entityContainer:[{
-							entitySet:[],
-							isDefaultEntityContainer:true,
-							name:"dummy"
-						}],
-						extensions:[{
-							name: "lang",
-							namespace: "http://www.w3.org/XML/1998/namespace",
-							value: "en"
-						}],
-						entityType:[],
-						namespace:"dummy"
-					}]
-			};
 			this.oServiceData.oMetadata = this.oMetadata;
 			this.pAnnotationsLoaded = this.oMetadata.loaded();
 
@@ -539,7 +520,10 @@ sap.ui.define([
 		delete oRequest.headers["MaxDataServiceVersion"]; // Remove odata header before call
 		
 		if (oRequest.data) {
-			oRequest.data=JSON.stringify(oRequest.data);	
+			if (oRequest.data.__metadata) {
+				delete oRequest.data.__metadata;
+			}
+			oRequest.data=JSON.stringify(oRequest.data);
 		}
 		
 		var oRequestHandle = jQuery.ajax(oRequest);
@@ -637,7 +621,6 @@ sap.ui.define([
 		if (!sName) {
 			return;
 		}
-		//console.log(sName);
 		var oSchema = this.oMetadata.oMetadata.dataServices.schema[0];
 		
 		var bFound;

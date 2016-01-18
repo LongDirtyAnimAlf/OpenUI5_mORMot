@@ -14,6 +14,32 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/model/odata/ODataMetadata'],
 	var RestMetadata = ODataMetadata.extend("sap.ui.model.rest.RestMetadata", /** @lends sap.ui.model.rest.RestMetadata.prototype */ {
 		constructor : function(sMetadataURI, mParams) {
 			ODataMetadata.apply(this, arguments);
+
+			// resolve promise !!
+			this.fnResolve(mParams);
+
+      // set namespace
+			var aDummyNamespace = "dummy";
+			
+			// dummy values for the metadata object ... needed !!!
+			this.oMetadata = {version : "0.0"};
+			this.oMetadata.dataServices = {
+				dataServiceVersion: "0.0",
+				schema : [{
+					entityContainer:[{
+						entitySet:[],
+						isDefaultEntityContainer:true,
+						name:aDummyNamespace
+					}],
+					extensions:[{
+						name: "lang",
+						namespace: "http://www.w3.org/XML/1998/namespace",
+						value: "en"
+					}],
+					entityType:[],
+					namespace:aDummyNamespace
+				}]
+			};
 		}
 	});
 
@@ -32,14 +58,10 @@ sap.ui.define(['jquery.sap.global', 'sap/ui/model/odata/ODataMetadata'],
 			return this.mEntityTypes[sPath];
 		}
 
-		// remove starting and trailing /
-		
 		var	aEntityTypeName,
 			oEntityType,
 			that = this;
 
-		//var sCandidate = sPath.replace(/^\/|\/$/g, ""),		
-		
 		var aParts = sPath.replace(/\/$/g, "").split("/");
 		var i = (aParts.length)-1;
 		i = i - ((i+1) % 2);

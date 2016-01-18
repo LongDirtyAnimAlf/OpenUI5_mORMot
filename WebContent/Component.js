@@ -30,6 +30,9 @@ sap.ui.define([
 			var oModel = new sap.ui.model.rest.RestModel(model.Config.getServiceUrl("/root/"));
 			oModel.setKey("ID");
 			oModel.setmORMotRootResponse(true);
+			
+			//Does already work, but disable for now.
+			//oModel.setDefaultBindingMode(sap.ui.model.BindingMode.TwoWay);			
 
 			this.setModel(oModel);
 

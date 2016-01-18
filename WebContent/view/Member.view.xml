@@ -65,6 +65,20 @@
 						text="{Zip}" />
 				</attributes>
 			</ObjectHeader>
+			<Label visible="false" text="{i18n>FIRSTNAME}" /> 
+			<Input
+				visible="false"			
+				value="{
+					path: 'FirstName' 
+				}"
+			/> 
+			<Label visible="false" text="{i18n>LASTNAME}" /> 
+			<Input
+				visible="false"			
+				value="{
+					path: 'LastName' 
+				}"
+			/> 
 			<VBox alignItems="Center">
 				<Image
 					src= "{PictureUrl}"
