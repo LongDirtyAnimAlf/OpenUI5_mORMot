@@ -3,7 +3,6 @@ program SAPUI5Server;
 {$I Synopse.inc}
 
 uses
-  {$I SynDprUses.inc}
   {$ifdef FPC}
   Interfaces,
   {$endif}

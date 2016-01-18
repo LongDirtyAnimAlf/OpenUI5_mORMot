@@ -1,5 +1,7 @@
 unit Main;
 
+{$I Synopse.inc}
+
 interface
 
 uses
@@ -21,6 +23,8 @@ type
   TCustomHttpServer = class(TSQLHttpServer)
   protected
     function Request(Ctxt: THttpServerRequest): cardinal; override;
+  public
+    ServerRoot:string;
   end;
 
 
@@ -53,7 +57,6 @@ type
 
 var
   Form1: TForm1;
-  ServerRoot:string;
 
 implementation
 
@@ -92,7 +95,7 @@ procedure TForm1.btnRootClick(Sender: TObject);
 begin
   if OpenDialog1.Execute then
   begin
-    ServerRoot:=ExtractFileDir(OpenDialog1.FileName);
+    TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(OpenDialog1.FileName);
   end;
 end;
 
@@ -121,15 +124,15 @@ begin
   Server.AccessControlAllowOrigin := '*'; // allow cross-site AJAX queries
 
 
-  ServerRoot:=ExtractFilePath(ParamStr(0))+WEBROOT;
+  TCustomHttpServer(Server).ServerRoot:=ExtractFilePath(ParamStr(0))+WEBROOT;
 
-  if NOT DirectoryExists(ServerRoot) then
-     ServerRoot:=ExtractFileDir(ParamStr(0));
+  if NOT DirectoryExists(TCustomHttpServer(Server).ServerRoot) then
+     TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(ParamStr(0));
 
-  //if NOT FileExists(ServerRoot+DirectorySeparator+INDEXFILE) then
-  //   ServerRoot:=ExtractFileDir(ParamStr(0));
+  //if NOT FileExists(TCustomHttpServer(Server).ServerRoot+DirectorySeparator+INDEXFILE) then
+  //   TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(ParamStr(0));
 
-  OpenDialog1.InitialDir:=ServerRoot;
+  OpenDialog1.InitialDir:=TCustomHttpServer(Server).ServerRoot;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -166,8 +169,10 @@ begin
 
       //TSQLLog.Add.Log(sllHTTP,'Serving local static contents');
 
+      FN := UrlDecode(copy(Ctxt.URL,Length(STATICROOT)+3,maxInt));
+
       if (DirectorySeparator<>'/')
-         then FN := StringReplaceChars(UrlDecode(copy(Ctxt.URL,Length(STATICROOT)+3,maxInt)),'/',DirectorySeparator);
+         then FN := StringReplaceChars(FN,'/',DirectorySeparator);
 
       // safety first: no deep directories !!
       //if PosEx('..',FN)>0 then
@@ -198,10 +203,8 @@ begin
     // call the associated TSQLRestServer instance(s)
     result := inherited Request(Ctxt);
 
-    aUserAgent:=FindIniNameValue(pointer(Ctxt.InHeaders),'USER-AGENT: ');
-    //
-    TSQLLog.Add.Log(sllHTTP,'User agent: '+aUserAgent);
-
+    //aUserAgent:=FindIniNameValue(pointer(Ctxt.InHeaders),'USER-AGENT: ');
+    //TSQLLog.Add.Log(sllHTTP,'User agent: '+aUserAgent);
     //if (Length(aUserAgent)>0) AND (PosEx('mORMot',aUserAgent)=0) then
     //   Ctxt.OutContent := '{"results":'+Ctxt.OutContent+'}';
 end;

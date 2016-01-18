@@ -1,11 +1,12 @@
 object Form1: TForm1
-  Left = 394
-  Height = 220
-  Top = 274
-  Width = 434
+  Left = 399
+  Height = 231
+  Top = 247
+  Width = 432
+  ActiveControl = Button1
   Caption = ' 04 - HTTP Server'
-  ClientHeight = 220
-  ClientWidth = 434
+  ClientHeight = 231
+  ClientWidth = 432
   Color = clBtnFace
   Font.Color = clWindowText
   Font.Height = -13
@@ -14,6 +15,7 @@ object Form1: TForm1
   OnDestroy = FormDestroy
   OnShow = FormShow
   LCLVersion = '1.5'
+  Visible = False
   object Label1: TLabel
     Left = 8
     Height = 33
@@ -58,7 +60,7 @@ object Form1: TForm1
   end
   object Memo1: TMemo
     Left = 8
-    Height = 106
+    Height = 112
     Top = 112
     Width = 416
     Anchors = [akTop, akLeft, akRight, akBottom]
