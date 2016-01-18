@@ -101,22 +101,19 @@ sap.ui.define([
 			var sPath = oBinding.getPath();
 			var oModel = oView.getModel();
 
-			console.log(oModel);
-
-			/*
 			// Does already work !!!
 			// But disable for now ... more tests needed. 			
 			//oModel.submitChanges();
 			oModel.submitChanges({ 
-                success : function(oData) {
-                    console.log("submitChangesSuccess", oData);
-                },
-                error : function(oError) {
-                    console.log("submitChangesError", oError);
-                }
-            });
-			*/
+				success: function(){
+					sap.m.MessageToast.show("Update successfull");					
+ 				},
+ 				error: function(){
+ 					alert("Update failed");
+ 				}
+ 			});
 			
+			/*
 			var mUserData = {};
 			// make a copy of the original ... not really needed ...
 			//var mUserData = jQuery.extend(true, {}, oProperty);
@@ -141,8 +138,19 @@ sap.ui.define([
 		        alert("Problem updating user");
 		      }, this)
 		    });
+		    */
+			
 		},
 		
+		onCancel: function() {
+			var oView = this.getView();
+			var oModel = oView.getModel();
+			var oBinding = oView.getBindingContext();
+			var oProperty = oBinding.getProperty();
+			var sPath = oBinding.getPath();
+			oModel.resetChanges([sPath]);
+		},
+
 		onDelete: function() {
 			var oView = this.getView();
 			var oBinding = oView.getBindingContext();

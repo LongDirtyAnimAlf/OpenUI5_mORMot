@@ -32,7 +32,7 @@ sap.ui.define([
 			oModel.setmORMotRootResponse(true);
 			
 			//Does already work, but disable for now.
-			//oModel.setDefaultBindingMode(sap.ui.model.BindingMode.TwoWay);			
+			oModel.setDefaultBindingMode(sap.ui.model.BindingMode.TwoWay);			
 
 			this.setModel(oModel);
 

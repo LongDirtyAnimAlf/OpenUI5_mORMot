@@ -60,12 +60,18 @@ var
 
 implementation
 
-{$R *.lfm}
-
 {$ifdef FPC}
-uses
-  LCLIntf; // for OpenURL
+{$R *.lfm}
+{$else}
+{$R *.dfm}
 {$endif}
+
+uses
+  {$ifdef FPC}
+  LCLIntf; // for OpenURL
+  {$else}
+  ShellApi;
+ {$endif}
 
 { TForm1 }
 
@@ -83,11 +89,13 @@ end;
 
 procedure TForm1.btnOpenClick(Sender: TObject);
 begin
-  {$ifdef Windows}
-  ShellExecute(0,'open',pointer('http://'+HOST+':'+PORT+'/'+STATICROOT+'/'+INDEXFILE),
+  {$ifdef MSWINDOWS}
+  ShellExecute(0,'open','http://'+HOST+':'+PORT+'/'+STATICROOT+'/'+INDEXFILE,
       nil,nil,SW_SHOWNORMAL);
   {$else}
+  {$ifdef FPC}
   OpenURL('http://'+HOST+':'+PORT+'/'+STATICROOT+'/'+INDEXFILE);
+  {$endif}
   {$endif}
 end;
 
@@ -171,8 +179,8 @@ begin
 
       FN := UrlDecode(copy(Ctxt.URL,Length(STATICROOT)+3,maxInt));
 
-      if (DirectorySeparator<>'/')
-         then FN := StringReplaceChars(FN,'/',DirectorySeparator);
+      if (PathDelim<>'/')
+         then FN := StringReplaceChars(FN,'/',PathDelim);
 
       // safety first: no deep directories !!
       //if PosEx('..',FN)>0 then
@@ -181,12 +189,12 @@ begin
       //  exit;
       //end;
 
-      while (FN<>'') and (FN[1]=DirectorySeparator) do delete(FN,1,1);
+      while (FN<>'') and (FN[1]=PathDelim) do delete(FN,1,1);
 
       x:=Pos('?',FN);
       if x>0 then delete(FN,x,maxInt);
 
-      while (FN<>'') and (FN[length(FN)]=DirectorySeparator) do delete(FN,length(FN),1);
+      while (FN<>'') and (FN[length(FN)]=PathDelim) do delete(FN,length(FN),1);
 
       FileName := IncludeTrailingPathDelimiter(ServerRoot)+UTF8ToString(FN);
 

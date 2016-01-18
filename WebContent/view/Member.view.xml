@@ -35,12 +35,17 @@
 				</contentLeft>					
 				<contentRight>
           			<Button 
-            			text="Update"
-            			type="Emphasized"
+            			text="{i18n>UPDATE_BUTTON_TEXT}"
+            			type="Accept"
             			visible="{device>/isNoPhone}"
             			press="onUpdate" />
+          			<Button 
+            			text="{i18n>CANCEL_BUTTON_TEXT}"
+            			type="Emphasized"
+            			visible="{device>/isNoPhone}"
+            			press="onCancel" />
           			<Button
-            			text="Delete"
+            			text="{i18n>DELETE_BUTTON_TEXT}"
             			type="Reject"
             			visible="{device>/isNoPhone}"            			
             			press="onDelete" />
@@ -65,20 +70,38 @@
 						text="{Zip}" />
 				</attributes>
 			</ObjectHeader>
-			<Label visible="false" text="{i18n>FIRSTNAME}" /> 
+    		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
+      			<core:Icon src="sap-icon://phone" size="2em" color="#1E90FF"/>
+				<Title text="{path : 'Phone', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" titleStyle="H3" class="sapUiSmallMargin"/>      			
+    		</HBox>
+    		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
+      			<core:Icon src="sap-icon://email" size="2em" color="#8E90FF"/>
+				<Link text="{path : 'Email', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>ClickToMail}" class="sapMH3FontSize sapUiSmallMargin" press="handleMemberMailButtonPress"/>
+    		</HBox>
+    		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
+				<core:Icon src="sap-icon://globe" size="2em" color="#4E90FF"/>    		
+      			<Title text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {}}" titleStyle="H3" class="sapUiSmallMargin"/>
+    		</HBox>
+    		<VBox
+				class="sapUiSmallMargin"
+				width="100%">
+			<Label text="{i18n>FIRSTNAME}" /> 
 			<Input
-				visible="false"			
+				width="300px"
+				class="sapUiSmallMarginBottom"
 				value="{
 					path: 'FirstName' 
 				}"
 			/> 
-			<Label visible="false" text="{i18n>LASTNAME}" /> 
+			<Label text="{i18n>LASTNAME}" /> 
 			<Input
-				visible="false"			
+				width="300px"
+				class="sapUiSmallMarginBottom"				
 				value="{
 					path: 'LastName' 
 				}"
 			/> 
+			</VBox>
 			<VBox alignItems="Center">
 				<Image
 					src= "{PictureUrl}"
