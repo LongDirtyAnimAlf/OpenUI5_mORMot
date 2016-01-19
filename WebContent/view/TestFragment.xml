@@ -1,0 +1,42 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <ViewSettingsDialog confirm="handleClose"
+					  cancel="handleClose"
+					 >
+    <filterItems>          
+     <ViewSettingsCustomItem id="cust1"
+        					  text="SortByWH/TO"
+        					  key="filter1">
+        <customControl>
+            <List id="Block1" >
+			    <InputListItem label="WareHouse">
+				   <CheckBox name="WareHouse Number" id="checkbox1" />
+			    </InputListItem>
+			  
+			      <InputListItem label="TransferOrder" >
+			      <CheckBox name="TransferOrder" id="checkbox2" />
+			    </InputListItem>
+		    </List>
+        </customControl>
+       </ViewSettingsCustomItem>
+      <ViewSettingsCustomItem id="cust2"
+        					  text="SortByDocs"
+        					  key="filter2">
+        <customControl>
+            <List id="list12" >
+			    <InputListItem label="Putaway">
+				   <CheckBox name="Putaway" id="Putaway" />
+			    </InputListItem>
+			    <InputListItem label="Picking">
+				   <CheckBox name="Picking" id="Picking" />
+			    </InputListItem>
+			      <InputListItem label="Internal" >
+			      <CheckBox name="Internal" id="Internal" />
+			    </InputListItem>
+		    </List>
+        </customControl>
+       </ViewSettingsCustomItem>
+    </filterItems>
+  </ViewSettingsDialog>
+</core:FragmentDefinition>

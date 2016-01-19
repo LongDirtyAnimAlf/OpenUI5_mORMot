@@ -78,7 +78,7 @@ type
     fSkype: RawUTF8;
     fTwitter: RawUTF8;
     fThumb: RawUTF8;
-    fImage: RawUTF8;
+    fImage: TSQLRawBlob;
     fNewEmail: TContactData;
     fNewPhone: TContactData;
     fPictureUrl: RawUTF8;
@@ -109,7 +109,7 @@ type
     property Skype: RawUTF8 read fSkype write fSkype;
     property Twitter: RawUTF8 read fTwitter write fTwitter;
     property Thumb: RawUTF8 read fThumb write fThumb;
-    property Image: RawUTF8 read fImage write fImage;
+    property Image: TSQLRawBlob read fImage write fImage;
     property NewEmail: TContactData read fNewEmail write fNewEmail;
     property NewPhone: TContactData read fNewPhone write fNewPhone;
     property PictureUrl: RawUTF8 read fPictureUrl write fPictureUrl;

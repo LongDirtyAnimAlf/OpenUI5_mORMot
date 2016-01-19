@@ -1,18 +1,40 @@
 sap.ui.define([
+    'jquery.sap.global',               
 	'sap/ui/demo/mORMot/localService/BaseController',
 	'sap/ui/demo/mORMot/model/formatter',
 	'sap/m/MessageToast',
 	'sap/m/MessageBox'
-], function (BaseController, formatter, MessageToast, MessageBox) {
+], function (jQuery,BaseController, formatter, MessageToast, MessageBox) {
 	return BaseController.extend("sap.ui.demo.mORMot.view.Member", {
 		formatter : formatter,
 
+		formatImageUrl: function(sID) {
+			var	oView = this.getView();
+			var oModel = oView.getModel();
+			return oModel.sServiceUrl.replace(/\/$/g, "")+"/Member/" + sID + "/Image";						
+		},
+		
 		_sTeamId : 0,
 		
 		onInit : function () {
 			this._router().getRoute("Member").attachPatternMatched(this._routePatternMatched, this);
 			this._router().getRoute("TeamMember").attachPatternMatched(this._routePatternMatched, this);
 		},
+
+		onAfterRendering : function() {
+			//var path = "/Member/1/Image";
+			//var image = this.getView().byId("realImage");			
+			//var image = $("#realImage");
+			//console.log("RENDERER !!!");
+			//image.bindProperty("src", path);
+			
+			//image.bindProperty("src", "/company/trusted", function(bValue) {
+			//    return bValue ? "green.png" : "red.png";
+			//}); 			
+			
+			//console.log(image);			
+			//image.attr("src", path);
+		},  
 
 		_routePatternMatched: function(oEvent) {
 			var sId = oEvent.getParameter("arguments").MemberID;
@@ -21,6 +43,9 @@ sap.ui.define([
 			var oModel = oView.getModel();
 			var sPath = "/Member/"+sId;
 			var oData = oModel.getData(sPath);
+			
+			var oImage = oView.byId("realImage2");			
+			oImage.setSrc(oModel.sServiceUrl.replace(/\/$/g, "")+sPath+"/Image");  			
 			
 			oView.bindElement({
 				path: sPath,
@@ -170,6 +195,35 @@ sap.ui.define([
 					alert("Delete failed");
 				}
 			});
-		}
+		},
+		
+		handleValueChange: function() {
+			var oView = this.getView();
+			var oModel = oView.getModel();
+			var oBinding = oView.getBindingContext();
+			var oProperty = oBinding.getProperty();
+			var sPath = oBinding.getPath()+"/Image";
+			var sURL = oModel.sServiceUrl.replace(/\/$/g, "")+sPath;						
+			var oFileUploader = oView.byId("fileUploader");
+			var f = oFileUploader.oFileUpload.files[0];
+			if (f) {  
+				 var r = new FileReader();
+				 r.onload = function(e) {
+					 var fileContent = e.target.result;
+					 	oModel.updateBlob(sPath,{
+					 			BlobData:fileContent,
+					 			success: function() {
+					 				sap.m.MessageToast.show("Update blob successfull");
+					 				oModel.refresh();
+					 			},
+					 			error: function() {
+					 				alert("Update blob failed");
+					 			}
+					 		}
+					 	);
+				 };  
+				 r.readAsArrayBuffer(f);
+			}  
+		}	
 	});
 });

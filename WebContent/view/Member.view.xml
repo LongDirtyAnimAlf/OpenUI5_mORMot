@@ -3,6 +3,9 @@
 	xmlns="sap.m"
 	xmlns:core="sap.ui.core"
 	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:l="sap.ui.layout"	
+	xmlns:form="sap.ui.layout.form"
+	xmlns:u="sap.ui.unified"
 	xmlns:control="control"
 	xmlns:h="http://www.w3.org/1999/xhtml">
 	<Page
@@ -41,7 +44,6 @@
             			press="onUpdate" />
           			<Button 
             			text="{i18n>CANCEL_BUTTON_TEXT}"
-            			type="Emphasized"
             			visible="{device>/isNoPhone}"
             			press="onCancel" />
           			<Button
@@ -82,32 +84,124 @@
 				<core:Icon src="sap-icon://globe" size="2em" color="#4E90FF"/>
 	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>ClickToMail}" class="sapMH3FontSize sapUiSmallMargin"/>
     		</HBox>
-    		<VBox
-				class="sapUiSmallMargin"
-				width="100%">
-			<Label text="{i18n>FIRSTNAME}" /> 
-			<Input
-				width="300px"
-				class="sapUiSmallMarginBottom"
-				value="{
-					path: 'FirstName' 
-				}"
-			/> 
-			<Label text="{i18n>LASTNAME}" /> 
-			<Input
-				width="300px"
-				class="sapUiSmallMarginBottom"				
-				value="{
-					path: 'LastName' 
-				}"
-			/> 
-			</VBox>
-			<VBox alignItems="Center">
-				<Image
-					src= "{PictureUrl}"
-					decorative="true"
-					densityAware="false" />
-			</VBox>
+    		
+			<form:Form id="FormDisplay"
+				minWidth="600"
+				maxContainerCols="2"
+				editable="true">
+				<form:title>
+					<core:Title text="Personal" />
+				</form:title>
+				<form:layout>
+					<form:ResponsiveGridLayout
+						labelSpanL="3"
+						labelSpanM="3"
+						emptySpanL="4"
+						emptySpanM="4"
+						columnsL="1"
+						columnsM="1" />
+				</form:layout>
+				<form:formContainers>
+					<form:FormContainer>
+						<form:formElements>
+							<form:FormElement label="FirstName">
+								<form:fields>
+									<Text text="{FirstName}"/>
+								</form:fields>
+							</form:FormElement>
+							<form:FormElement label="LastName">
+								<form:fields>
+									<Text text="{LastName}" />
+								</form:fields>
+							</form:FormElement>
+						</form:formElements>
+					</form:FormContainer>
+				</form:formContainers>
+			</form:Form>
+    		
+
+			<l:Grid
+				class="sapUiSmallMarginTop"
+			hSpacing="2"
+			defaultSpan="L6 M6 S10">
+				<l:content>
+					<Image src="{PictureUrl}" width="100%">
+						<layoutData>
+							<l:GridData
+								span="L3 M3 S8"
+							linebreakL="true"
+							linebreakM="true"
+							linebreakS="true" />
+						</layoutData>
+					</Image>
+					<VBox>
+						<Text text="{FirstName} {LastName}" class="nameTitle sapUiSmallMarginBottom" />
+						<Label text="{i18n>FIRSTNAME}" /> 
+						<Input
+							width="300px"
+							class="sapUiSmallMarginBottom"
+							value="{
+								path: 'FirstName' 
+							}"
+						/> 
+						<Label text="{i18n>LASTNAME}" /> 
+						<Input
+							width="80%"
+							value="{
+								path: 'LastName' 
+							}"
+						/>
+						<HBox alignItems="Center">
+							<Image
+								class="sapUiResponsiveMargin"							
+								width="80px"
+                    			heigh="50px"
+								id="realImage1"
+								src="{
+									path: 'ID',					
+									formatter: '.formatImageUrl'
+								}" 
+								decorative="true"
+								densityAware="false" />
+							<Image
+								class="sapUiResponsiveMargin"							
+								width="80px"
+                    			heigh="50px"
+								id="realImage2"
+								decorative="true"
+								densityAware="false" />
+							<u:FileUploader
+								id="fileUploader"
+								name="myFileUpload"
+								uploadUrl="upload/"
+								icon="sap-icon://upload"
+								tooltip="Upload your file to the local server"
+								change="handleValueChange"
+								uploadComplete="handleUploadComplete"/>
+						</HBox>
+					</VBox>
+				</l:content>
+			</l:Grid>
+			<form:SimpleForm layout="ResponsiveGridLayout" labelSpanL="12" labelSpanM="12" columnsM="2" columnsL="3">
+			<core:Title text="General" />
+			<Label text="{i18n>FIRSTNAME}"/>			
+			<Input value="{path: 'FirstName', type: 'sap.ui.model.odata.type.String', constraints: {nullable: false}}"/>						
+			<Label text="{i18n>LASTNAME}"/>			
+			<Input value="{path: 'LastName', type: 'sap.ui.model.odata.type.String', constraints: {nullable: false}}"/>
+			<Label text="{i18n>PHONE}"/> 
+			<Input value="{path: 'Phone', type: 'sap.ui.model.odata.type.String', constraints: {maxLength: 15, isDigitSequence: true}}"/>
+			<Label text="{i18n>DOB}" />
+			<DateTimeInput type="Date" value="{Dob}"/>
+			<Label text="{i18n>GENDER}" />			
+			<RadioButton groupName="sex" id="gender_male"   text="Male"  />
+       		<RadioButton groupName="sex" id="gender_female" text="Female" />				
+			<core:Title text="Picture"/>
+			<Image
+				width = "100%"
+				src = "{PictureUrl}"
+				decorative = "true"
+				densityAware = "false"/>
+			</form:SimpleForm>
 		</content>
 	</Page>
 </mvc:View>

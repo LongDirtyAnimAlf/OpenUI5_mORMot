@@ -47,7 +47,12 @@ sap.ui.define(["sap/ui/core/format/NumberFormat",
 
 		currencyValue : function (value) {
 			return parseFloat(value).toFixed(2);
+		},
+		
+		imageURL : function (value) {
+			return value+'/Image';
 		}		
+		
 	
 	};
 	return formatter;

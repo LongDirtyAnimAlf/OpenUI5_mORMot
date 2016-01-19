@@ -265,22 +265,22 @@ sap.ui.define([
 			}
 
 			var oEntityType = that.oMetadata._getEntityTypeByPath(sPath);			
-			
-			var sKey = oEntityType.key.propertyRef[0].name;
-			
-			var oProperty = oEntityType.property;			
-			var oNewProperty = [];
-			
-			if (jQuery.sap.endsWith(that.sServiceUrl,'/')) {
-				sPath = that.sServiceUrl + sPath.substr(1);
-			} else {
-				sPath = that.sServiceUrl + sPath;
-			}
 
 			var aNewResponse = {};			
 			
 			// add uri and property to mimic odata metadata results ... bit of a trick ... ;-)
 			if (oData) {
+				
+				var sKey = oEntityType.key.propertyRef[0].name;
+				
+				var oProperty = oEntityType.property;			
+				var oNewProperty = [];
+				
+				if (jQuery.sap.endsWith(that.sServiceUrl,'/')) {
+					sPath = that.sServiceUrl + sPath.substr(1);
+				} else {
+					sPath = that.sServiceUrl + sPath;
+				}
 
 				if (jQuery.isArray(oData)) {
 					for (var sName in oData[0]) {
@@ -523,7 +523,10 @@ sap.ui.define([
 			if (oRequest.data.__metadata) {
 				delete oRequest.data.__metadata;
 			}
-			oRequest.data=JSON.stringify(oRequest.data);
+			if (!jQuery.sap.startsWith(oRequest.headers["Content-Type"], "application/octet-stream")) {
+			//if (oRequest.headers["Content-Type"] != "application/octet-stream; charset=utf-8") {
+				oRequest.data=JSON.stringify(oRequest.data);
+			} 			
 		}
 		
 		var oRequestHandle = jQuery.ajax(oRequest);
@@ -709,6 +712,38 @@ sap.ui.define([
 		sGroupId = oChangeGroup.groupId;
 		sChangeSetId = oChangeGroup.single ? jQuery.sap.uid() : oChangeGroup.changeSetId;
 		return {groupId: sGroupId, changeSetId: sChangeSetId};
+	};
+	
+	RestModel.prototype.updateBlob = function(sPath, mParameters) {
+		var oBlobData, mHeaders, fnSuccess, fnError, oRequest, sUrl, handleSuccess,
+		sMethod, mRequests, sGroupId, sChangeSetId,
+		that = this;
+
+		if (mParameters) {
+			oBlobData = mParameters.BlobData;
+			fnSuccess = mParameters.success;
+			fnError   = mParameters.error;
+		}
+		
+		sMethod = "PUT";
+		mHeaders = this._getHeaders(mHeaders);
+
+		handleSuccess = function(oData, oResponse) {
+			if (fnSuccess) {
+				fnSuccess(oData, oResponse);
+			}
+		};
+
+		return this._processRequest(function() {
+			sUrl = that._createRequestUrl(sPath);
+			oRequest = that._createRequest(sUrl, sMethod, mHeaders);
+			mHeaders["Content-Type"] = "application/octet-stream";			
+			mRequests = that.mRequests;
+			oRequest.data = oBlobData;			
+			oRequest.processData = false;			
+			that._pushToRequestQueue(mRequests, sGroupId, sChangeSetId, oRequest, handleSuccess, fnError);
+			return oRequest;
+		});
 	};
 	
 	return RestModel;
