@@ -52,6 +52,12 @@ Temporary Items
 *.compiled
 *.rst
 !docs/*.rst
+*.dproj
+*.dproj.local
+*.identcache
+*.stat
+*.res
+*.lps
 
 *.dcu
 *.identcache

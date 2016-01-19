@@ -83,6 +83,7 @@ type
     fNewPhone: TContactData;
     fPictureUrl: RawUTF8;
     fResume: TResume;
+    fWebAddress: RawUTF8;
     fMemberTeam:TSQLTeam;
   public
     class procedure InitializeTable(Server: TSQLRestServer; const FieldName: RawUTF8;
@@ -113,6 +114,7 @@ type
     property NewPhone: TContactData read fNewPhone write fNewPhone;
     property PictureUrl: RawUTF8 read fPictureUrl write fPictureUrl;
     property Resume: TResume read fResume write fResume;
+    property WebAddress: RawUTF8 read fWebAddress write fWebAddress;
     property MemberTeam:TSQLTeam read fMemberTeam write fMemberTeam;
   end;
 
@@ -207,6 +209,7 @@ begin
       aMember.NewEmail.Add('john@doe.com');
       aMember.NewEmail.Add('johnny@doe.com');
       aMember.NewEmail.Add('jd@doe.com');
+      aMember.WebAddress:='https://en.wikipedia.org/wiki/John_Doe';
       aMember.PictureUrl:='img/john.jpg';
       aMember.MemberTeam:=TSQLTeam(1);
       aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
@@ -219,6 +222,7 @@ begin
       aMember.LastName:='Bouchez';
       aMember.Email:='webcontact01@synopse.info';
       aMember.PictureUrl:='img/arnaud.jpg';
+      aMember.WebAddress:='http://synopse.info';
       aMember.MemberTeam:=TSQLTeam(1);
       aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
       Server.Add(aMember,true);
@@ -228,6 +232,7 @@ begin
       aMember.Phone:='0612345678';
       aMember.Email:='longdirtyanimalf@gmail.com';
       aMember.PictureUrl:='img/don.jpg';
+      aMember.WebAddress:='https://en.wikipedia.org/wiki/Don_(honorific)';
       aMember.MemberTeam:=TSQLTeam(2);
       aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
       Server.Add(aMember,true);

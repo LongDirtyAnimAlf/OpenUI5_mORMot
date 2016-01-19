@@ -79,8 +79,8 @@
 				<Link text="{path : 'Email', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>ClickToMail}" class="sapMH3FontSize sapUiSmallMargin" press="handleMemberMailButtonPress"/>
     		</HBox>
     		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
-				<core:Icon src="sap-icon://globe" size="2em" color="#4E90FF"/>    		
-      			<Title text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {}}" titleStyle="H3" class="sapUiSmallMargin"/>
+				<core:Icon src="sap-icon://globe" size="2em" color="#4E90FF"/>
+	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>ClickToMail}" class="sapMH3FontSize sapUiSmallMargin"/>
     		</HBox>
     		<VBox
 				class="sapUiSmallMargin"

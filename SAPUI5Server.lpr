@@ -3,12 +3,10 @@ program SAPUI5Server;
 {$I Synopse.inc}
 
 uses
-  {$ifdef FPC}
   Interfaces,
-  {$endif}
   Forms,
-  Main,
-  SampleData;
+  Main in 'Main.pas' {Form1},
+  SampleData in 'SampleData.pas';
 
 {$R *.res}
 
