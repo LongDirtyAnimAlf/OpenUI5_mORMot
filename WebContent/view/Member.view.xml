@@ -78,16 +78,14 @@
     		</HBox>
     		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
       			<core:Icon src="sap-icon://email" size="2em" color="#8E90FF"/>
-				<Link text="{path : 'Email', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>ClickToMail}" class="sapMH3FontSize sapUiSmallMargin" press="handleMemberMailButtonPress"/>
+				<Link text="{path : 'Email', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>MAIL_BUTTON_TEXT.TOOLTIP}" class="sapMH3FontSize sapUiSmallMargin" press="handleMemberMailButtonPress"/>
     		</HBox>
     		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
 				<core:Icon src="sap-icon://globe" size="2em" color="#4E90FF"/>
-	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>ClickToMail}" class="sapMH3FontSize sapUiSmallMargin"/>
+	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>WWW_BUTTON_TEXT.TOOLTIP}" class="sapMH3FontSize sapUiSmallMargin"/>
     		</HBox>
     		
 			<form:Form id="FormDisplay"
-				minWidth="600"
-				maxContainerCols="2"
 				editable="true">
 				<form:title>
 					<core:Title text="Personal" />
@@ -125,7 +123,7 @@
 			hSpacing="2"
 			defaultSpan="L6 M6 S10">
 				<l:content>
-					<Image src="{PictureUrl}" width="100%">
+					<Image src="{PictureUrl}" id="realImage0" width="100%">
 						<layoutData>
 							<l:GridData
 								span="L3 M3 S8"
@@ -155,7 +153,7 @@
 							<Image
 								class="sapUiResponsiveMargin"							
 								width="80px"
-                    			heigh="50px"
+                    			height="100px"
 								id="realImage1"
 								src="{
 									path: 'ID',					
@@ -166,18 +164,20 @@
 							<Image
 								class="sapUiResponsiveMargin"							
 								width="80px"
-                    			heigh="50px"
+                    			height="100px"
 								id="realImage2"
 								decorative="true"
 								densityAware="false" />
 							<u:FileUploader
 								id="fileUploader"
-								name="myFileUpload"
-								uploadUrl="upload/"
+								name="files"
 								icon="sap-icon://upload"
+								fileType="jpg,jpeg,png"
+								maximumFileSize="5"
+								multiple="false"
+								buttonOnly="true"   
 								tooltip="Upload your file to the local server"
-								change="handleValueChange"
-								uploadComplete="handleUploadComplete"/>
+								change="handleValueChange"/>
 						</HBox>
 					</VBox>
 				</l:content>

@@ -63,9 +63,14 @@ sap.ui.define([
 			this.bJSON = true;
 			this.sDefaultCountMode = CountMode.None;
 			this.sDefaultOperationMode = OperationMode.Client;
-			this.sDefaultUpdateMethod = UpdateMethod.Put;			
+			this.sDefaultUpdateMethod = UpdateMethod.Put;
+			
+			this.bTokenHandling = false;			
 			
 			this.oHeaders["Accept"] = "application/json";
+			
+			// remove trailing path delimiter if there
+			this.sServiceUrl = this.sServiceUrl.replace(/\/$/g, "");			
 			
 			// destroy current metadata object
 			this.oMetadata.destroy();
@@ -338,7 +343,6 @@ sap.ui.define([
 					return;
 				}
 			}
-
 			if (fnError) {
 				fnError(oError,oRequest);
 			}
@@ -429,7 +433,17 @@ sap.ui.define([
 			}
 		}
 
-		mParameters.statusCode = oError.status;
+		//if (textStatus == "timeout") {
+		//	create_notify("msgs", { title:'Timeout', text:'Sorry, server is down at the moment. Try again later', icon:'server_down.gif' });
+		//}
+		
+		if (oError.responseJSON.errorText == "Forbidden") {
+			// a bit rough, needed to get an abort in case of a login failure !!
+			//mParameters.statusCode = 0;
+		} else {
+		}
+		
+		mParameters.statusCode = oError.status;		
 		mParameters.statusText = oError.statusText;
 		mParameters.headers = oError.getAllResponseHeaders();
 		mParameters.responseText = oError.responseText;
@@ -447,7 +461,7 @@ sap.ui.define([
 		/* make sure to set content type header for POST/PUT requests when using JSON
 		 * may be removed as later gateway versions support this */
 		if (sMethod !== "DELETE" && sMethod !== "GET") {
-			mHeaders["Content-Type"] = "application/json";
+			mHeaders["Content-Type"] = "application/json; charset=UTF-8";
 		}
 
 		// Set Accept header for $count requests
@@ -487,7 +501,17 @@ sap.ui.define([
 	// send and retrieve data with standard jquery ajax 
 	RestModel.prototype._request = function(oRequest, fnSuccess, fnError) {
 
-		if (this.bDestroyed) {
+		
+		// Added: ignore root response for mORMot ... remove trailing path delimiter
+		if (
+			this.bDestroyed
+			//||
+			//(oRequest.url.replace(/\/$/g, "")==this.sServiceUrl)
+			//||
+			//(oRequest.method=="HEAD")
+			||
+			(oRequest.url.indexOf("null") > -1)
+		) {
 			return {
 				abort: function() {}
 			};
@@ -524,10 +548,17 @@ sap.ui.define([
 				delete oRequest.data.__metadata;
 			}
 			if (!jQuery.sap.startsWith(oRequest.headers["Content-Type"], "application/octet-stream")) {
-			//if (oRequest.headers["Content-Type"] != "application/octet-stream; charset=utf-8") {
 				oRequest.data=JSON.stringify(oRequest.data);
 			} 			
 		}
+		
+		//oRequest.crossDomain = true;
+		
+		//oRequest.beforeSend = function(xmlHttpRequest) {
+		//        xmlHttpRequest.withCredentials = true;
+	    //}
+		
+		oRequest.url = this.signUrl(oRequest.url);
 		
 		var oRequestHandle = jQuery.ajax(oRequest);
 
@@ -536,36 +567,6 @@ sap.ui.define([
 			this.aPendingRequestHandles.push(oRequestHandle);
 		}
 
-		return oRequestHandle;
-	};
-
-	
-	// adapted for REST that does not transmit all results as an array with a results header
-	// and for missing metadata
-	RestModel.prototype._processRequest = function(fnProcessRequest) {
-		var oRequestHandle, oRequest,
-			bAborted = false,
-			that = this;
-
-		oRequest = fnProcessRequest();
-
-		that._processRequestQueueAsync(that.mRequests);
-			
-		if (bAborted) {
-			oRequestHandle.abort();
-		}
-
-		oRequestHandle = {
-			abort: function() {
-				bAborted = true;
-				if (oRequest) {
-					oRequest._aborted = true;
-					if (oRequest._handle) {
-						oRequest._handle.abort();
-					}
-				}
-			}
-		};
 		return oRequestHandle;
 	};
 
@@ -682,8 +683,9 @@ sap.ui.define([
 		// get key from params or settings
 		// mimics metadata info
 		this._createmetakey(sPath, mParameters);
-		//return ODataModel.prototype.bindList.apply(this, [sPath, oContext, aSorters, aFilters, mParameters]);		
-		return ODataModel.prototype.bindList.apply(this, arguments);		
+		//mParameters.faultTolerant = true;
+		return ODataModel.prototype.bindList.apply(this, [sPath, oContext, aSorters, aFilters, mParameters]);		
+		//return ODataModel.prototype.bindList.apply(this, arguments);		
 	};
 
 	// intercept creation of bindings to create metadata	
@@ -691,7 +693,9 @@ sap.ui.define([
 		// get key from params or settings
 		// mimics metadata info
 		this._createmetakey(sPath, mParameters);
-		return ODataModel.prototype.bindTree.apply(this, arguments);		
+		//mParameters.faultTolerant = true;		
+		return ODataModel.prototype.bindTree.apply(this, [sPath, oContext, aFilters, mParameters, aSorters]);		
+		//return ODataModel.prototype.bindTree.apply(this, arguments);		
 	};
 
 	// first start of key creation
@@ -744,6 +748,12 @@ sap.ui.define([
 			that._pushToRequestQueue(mRequests, sGroupId, sChangeSetId, oRequest, handleSuccess, fnError);
 			return oRequest;
 		});
+	};
+
+	RestModel.prototype.signUrl = function(sUrl) {
+		var sKey = sUrl.replace(this.mORMotClient.ServerURL,"");
+		sKey = sKey.substr(1);		
+		return this.mORMotClient.ServerURL +"/" + this.mORMotClient.signUrl(sKey);		
 	};
 	
 	return RestModel;

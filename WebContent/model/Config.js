@@ -9,20 +9,21 @@ model.Config = {};
 
 model.Config.getServiceUrl = function(sServiceUrl) {
   // If the path doesn't have a leading slash, add one
-  sServiceUrl = sServiceUrl.charAt(0) !== "/" ? "/" + sServiceUrl : sServiceUrl;
-  return model.Config.getHost() + sServiceUrl;
+  if (sServiceUrl) {
+	  sServiceUrl = sServiceUrl.charAt(0) !== "/" ? "/" + sServiceUrl : sServiceUrl;
+	  return model.Config.getHost() + sServiceUrl;	  
+  } else {
+	  return model.Config.getHost();
+  }
 };
 
 model.Config.getUser = function() {
-
 	return "";
 
 };
 
 model.Config.getPwd = function() {
-
 	return "";
-
 };
 
 model.Config.getHost = function() {

@@ -11,7 +11,10 @@ sap.ui.define([
 		formatImageUrl: function(sID) {
 			var	oView = this.getView();
 			var oModel = oView.getModel();
-			return oModel.sServiceUrl.replace(/\/$/g, "")+"/Member/" + sID + "/Image";						
+			var sUrl = oModel.sServiceUrl.replace(/\/$/g, "")+"/Member/" + sID + "/Image";
+			//if (sID) {
+				return oModel.signUrl(sUrl);				
+			//}
 		},
 		
 		_sTeamId : 0,
@@ -21,21 +24,6 @@ sap.ui.define([
 			this._router().getRoute("TeamMember").attachPatternMatched(this._routePatternMatched, this);
 		},
 
-		onAfterRendering : function() {
-			//var path = "/Member/1/Image";
-			//var image = this.getView().byId("realImage");			
-			//var image = $("#realImage");
-			//console.log("RENDERER !!!");
-			//image.bindProperty("src", path);
-			
-			//image.bindProperty("src", "/company/trusted", function(bValue) {
-			//    return bValue ? "green.png" : "red.png";
-			//}); 			
-			
-			//console.log(image);			
-			//image.attr("src", path);
-		},  
-
 		_routePatternMatched: function(oEvent) {
 			var sId = oEvent.getParameter("arguments").MemberID;
 			this._sTeamId = (oEvent.getParameter("arguments").TeamID || 0);
@@ -44,8 +32,9 @@ sap.ui.define([
 			var sPath = "/Member/"+sId;
 			var oData = oModel.getData(sPath);
 			
-			var oImage = oView.byId("realImage2");			
-			oImage.setSrc(oModel.sServiceUrl.replace(/\/$/g, "")+sPath+"/Image");  			
+			var oImage = oView.byId("realImage2");
+			var sUrl = oModel.sServiceUrl.replace(/\/$/g, "")+sPath+"/Image";
+			oImage.setSrc(oModel.signUrl(sUrl));			
 			
 			oView.bindElement({
 				path: sPath,
@@ -202,19 +191,24 @@ sap.ui.define([
 			var oModel = oView.getModel();
 			var oBinding = oView.getBindingContext();
 			var oProperty = oBinding.getProperty();
+			// get the path of the image as defined in the mORMot SampleModel
 			var sPath = oBinding.getPath()+"/Image";
-			var sURL = oModel.sServiceUrl.replace(/\/$/g, "")+sPath;						
 			var oFileUploader = oView.byId("fileUploader");
 			var f = oFileUploader.oFileUpload.files[0];
+			var that=this;
+			
 			if (f) {  
 				 var r = new FileReader();
 				 r.onload = function(e) {
+						console.log(e);					 
 					 var fileContent = e.target.result;
 					 	oModel.updateBlob(sPath,{
 					 			BlobData:fileContent,
-					 			success: function() {
+					 			success: function(oResponse1,oResponse2,oResponse3) {
 					 				sap.m.MessageToast.show("Update blob successfull");
-					 				oModel.refresh();
+					 				var oImage = that.oView.byId("realImage0");
+					 				oImage.setSrc(oResponse2.url);
+					 				oImage.rerender();
 					 			},
 					 			error: function() {
 					 				alert("Update blob failed");

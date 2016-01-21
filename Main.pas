@@ -120,7 +120,7 @@ begin
   end;
 
   Model := CreateSampleModel;
-  DB := TSQLRestServerDB.Create(Model,ChangeFileExt(ExeVersion.ProgramFileName,'.db3'),false);
+  DB := TSQLRestServerDB.Create(Model,ChangeFileExt(ExeVersion.ProgramFileName,'.db3'),true);
   DB.CreateMissingTables;
   DB.Html200WithNoBodyReturns204:=True;
 

@@ -26,12 +26,31 @@ sap.ui.define([
 				bundleName: "sap.ui.demo.mORMot.i18n.appTexts"
 			});
 			this.setModel(oI18nModel, "i18n");
+			
+			var mORMotRoot = "root";
 
-			var oModel = new sap.ui.model.rest.RestModel(model.Config.getServiceUrl("/root/"));
+			var oModel = new sap.ui.model.rest.RestModel(model.Config.getServiceUrl(mORMotRoot));
+			
 			oModel.setKey("ID");
 			oModel.setmORMotRootResponse(true);
 			
-			//Does already work, but disable for now.
+			
+			// javascript mORMot client ... thanks to esmondb
+			var mORMotClient = mORMot.Client.getInstance();
+			function onlogin(success, data, statusText) {
+				if (success) {
+					sap.m.MessageToast.show("Login of " + data + " successfull");
+				} else {
+					if (data==400) {
+						sap.m.MessageToast.show("Login not needed ... continuing !");
+					} else {
+						sap.m.MessageToast.show("Login failure due to : " + data + ", " + statusText);
+					}
+				}
+			}
+			mORMotClient.logIn(model.Config.getServiceUrl(), mORMotRoot, "User", "synopse", onlogin);
+			oModel.mORMotClient = mORMotClient; 
+			
 			oModel.setDefaultBindingMode(sap.ui.model.BindingMode.TwoWay);			
 
 			this.setModel(oModel);
@@ -57,7 +76,6 @@ sap.ui.define([
 
 			// initialize the router
 			this._router.initialize();
-
 		},
 
 		createContent: function () {
