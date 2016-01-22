@@ -153,7 +153,7 @@ begin
   TSQLLog.Add.Log(sllInfo,'Model created !!');
 
   TSQLLog.Add.Log(sllInfo,'Database file at '+fDataFolder+PathDelim+'data.db3');
-  DB := TSQLRestServerDB.Create(Model,fDataFolder+PathDelim+'data.db3',false);
+  DB := TSQLRestServerDB.Create(Model,fDataFolder+PathDelim+'data.db3',true);
   DB.CreateMissingTables;
   DB.Html200WithNoBodyReturns204:=True;
   TSQLLog.Add.Log(sllInfo,'Database started !!');

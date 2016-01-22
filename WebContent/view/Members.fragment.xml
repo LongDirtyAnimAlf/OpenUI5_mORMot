@@ -18,7 +18,8 @@
 			<cells>
 				<ObjectIdentifier
 					title="{LastName}"
-					text="ID {ID}"					 />
+					icon="{PictureUrl}"					
+					text="ID {ID}"/>
 				<Text text="{FirstName}" />
 				<Text
 					text="{

@@ -61,7 +61,8 @@
 				<Link text="{i18n>FlipToResume}" tooltip="{i18n>FlipToResume.tooltip}" press="onShowResume" />
 			</Toolbar>
 			<ObjectHeader
-				title="{LastName}">
+				icon="{PictureUrl}"
+				title="{FirstName} {LastName}">
 				<attributes>
 					<ObjectAttribute
 						id = "Address"
@@ -72,17 +73,48 @@
 						text="{Zip}" />
 				</attributes>
 			</ObjectHeader>
+			<HBox alignItems="Center">
+				<Image
+					class="sapUiResponsiveMargin"							
+					width="80px"
+           			height="100px"
+					id="realImage1"
+					src="{
+						path: 'ID',					
+						formatter: '.formatImageUrl'
+					}" 
+					decorative="true"
+					densityAware="false" />
+				<Image
+					class="sapUiResponsiveMargin"							
+					width="80px"
+           			height="100px"
+					id="realImage2"
+					decorative="true"
+					densityAware="false" />
+				<u:FileUploader
+					id="fileUploader"
+					name="files"
+					class="sapUiResponsiveMargin"					
+					icon="sap-icon://upload"
+					fileType="jpg,jpeg,png"
+					maximumFileSize="5"
+					multiple="false"
+					buttonOnly="true"   
+					tooltip="Upload your file to the local server"
+					change="handleValueChange"/>
+			</HBox>
     		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
-      			<core:Icon src="sap-icon://phone" size="2em" color="#1E90FF"/>
-				<Title text="{path : 'Phone', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" titleStyle="H3" class="sapUiSmallMargin"/>      			
+      			<core:Icon src="sap-icon://phone" size="1.5em" color="#1E90FF"/>
+				<Text text="{path : 'Phone', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" class="sapUiSmallMargin"/>      			
     		</HBox>
     		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
-      			<core:Icon src="sap-icon://email" size="2em" color="#8E90FF"/>
-				<Link text="{path : 'Email', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>MAIL_BUTTON_TEXT.TOOLTIP}" class="sapMH3FontSize sapUiSmallMargin" press="handleMemberMailButtonPress"/>
+      			<core:Icon src="sap-icon://email" size="1.5em" color="#8E90FF"/>
+				<Link text="{path : 'Email', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>MAIL_BUTTON_TEXT.TOOLTIP}" class="sapUiSmallMargin" press="handleMemberMailButtonPress"/>
     		</HBox>
     		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
-				<core:Icon src="sap-icon://globe" size="2em" color="#4E90FF"/>
-	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>WWW_BUTTON_TEXT.TOOLTIP}" class="sapMH3FontSize sapUiSmallMargin"/>
+				<core:Icon src="sap-icon://globe" size="1.5em" color="#4E90FF"/>
+	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>WWW_BUTTON_TEXT.TOOLTIP}" class="sapUiSmallMargin"/>
     		</HBox>
     		
 			<form:Form id="FormDisplay"
@@ -149,36 +181,6 @@
 								path: 'LastName' 
 							}"
 						/>
-						<HBox alignItems="Center">
-							<Image
-								class="sapUiResponsiveMargin"							
-								width="80px"
-                    			height="100px"
-								id="realImage1"
-								src="{
-									path: 'ID',					
-									formatter: '.formatImageUrl'
-								}" 
-								decorative="true"
-								densityAware="false" />
-							<Image
-								class="sapUiResponsiveMargin"							
-								width="80px"
-                    			height="100px"
-								id="realImage2"
-								decorative="true"
-								densityAware="false" />
-							<u:FileUploader
-								id="fileUploader"
-								name="files"
-								icon="sap-icon://upload"
-								fileType="jpg,jpeg,png"
-								maximumFileSize="5"
-								multiple="false"
-								buttonOnly="true"   
-								tooltip="Upload your file to the local server"
-								change="handleValueChange"/>
-						</HBox>
 					</VBox>
 				</l:content>
 			</l:Grid>
