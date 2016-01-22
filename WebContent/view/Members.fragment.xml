@@ -18,7 +18,7 @@
 			<cells>
 				<ObjectIdentifier
 					title="{LastName}"
-					text="{ID}" />
+					text="ID {ID}"					 />
 				<Text text="{FirstName}" />
 				<Text
 					text="{
@@ -28,24 +28,24 @@
 			</cells>
 		</ColumnListItem>
 		<columns>
-			<Column minScreenWidth="Tablet">
+			<Column>
 				<header>
-					<Text text="LastName" />
+					<Text text="{i18n>MEMBER}" />
+				</header>
+			</Column>
+			<Column
+				minScreenWidth="Small"
+				demandPopin="true" >
+				<header>
+					<Text text="{i18n>FIRSTNAME}" />
 				</header>
 			</Column>
 			<Column
 				minScreenWidth="Tablet"
-				demandPopin="true" >
-				<header>
-					<Text text="FirstName" />
-				</header>
-			</Column>
-			<Column
-				width="10em"
 				demandPopin="true"
 				hAlign="Center">
 				<header>
-					<Text text="Team" />
+					<Text text="{i18n>TEAM}" />
 				</header>
 			</Column>
 		</columns>
