@@ -36,6 +36,12 @@
 					text="{i18n>TEAM_ADD_FORM_TITLE}" 
 					tooltip="{i18n>TEAM_ADD_PAGE_TITLE}"           		
             		press="onAddTeamFloat" />
+          		<Button
+            		icon="sap-icon://company-view"
+					id="AllMembersButton"
+					text="{i18n>ALLMEMBER_BUTTON_TEXT}" 
+					tooltip="{i18n>ALLMEMBER_BUTTON_TEXT}"           		
+            		press="onShowAllMembers" />
 			</Toolbar>
 		</footer>
 		<content>

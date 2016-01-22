@@ -1,6 +1,9 @@
 sap.ui.define([
 	'sap/ui/demo/mORMot/localService/BaseController',
 	'sap/ui/demo/mORMot/model/formatter',
+	'sap/ui/Device',	
+	'sap/ui/core/Fragment',
+	'sap/m/MessageToast',	
 	'sap/ui/model/Filter',
 	'sap/ui/model/FilterOperator',
 	'sap/ui/model/Sorter',
@@ -8,6 +11,9 @@ sap.ui.define([
 	'sap/m/Button'
 ], function (BaseController,
 			 formatter,
+			 Device,
+			 Fragment,
+			 MessageToast,			 
 			 Filter,
 			 FilterOperator,
 			 Sorter,
@@ -40,6 +46,17 @@ sap.ui.define([
 		onInit: function () {
 			this._search();
 		},
+		
+		onExit : function () {
+			if (this._oDialog) {
+				this._oDialog.destroy();
+			}
+			
+			if (this._NewTeamDialog) {
+				this._NewTeamDialog.destroy();
+			}			
+			
+		}, 		
 
 		handleSearch: function (oEvent) {
 			if (oEvent.getParameters().refreshButtonPressed) {
@@ -83,6 +100,7 @@ sap.ui.define([
 			var oSortFirstNameButton = oView.byId("SortFirstNameButton");
 			var oSortLastNameButton = oView.byId("SortLastNameButton");
 			var oAddTeamButton = oView.byId("AddTeamButton");			
+			var oAllMembersButton = oView.byId("AllMembersButton");			
 			
 			var oSearchFieldValue = ( sQuery || oView.byId("searchField").getValue());			
 
@@ -93,7 +111,9 @@ sap.ui.define([
 			oTeamList.toggleStyleClass("invisible", bShowSearch);
 			oSortFirstNameButton.toggleStyleClass("invisible", !bShowSearch);
 			oSortLastNameButton.toggleStyleClass("invisible", !bShowSearch);			
-			oAddTeamButton.toggleStyleClass("invisible", bShowSearch);			
+			oAddTeamButton.toggleStyleClass("invisible", bShowSearch);
+			oAllMembersButton.toggleStyleClass("invisible", bShowSearch);			
+			
 
 			if (bShowSearch) {
 				this._changeNoDataTextToIndicateLoading(oMemberList);
@@ -165,6 +185,11 @@ sap.ui.define([
 			this._router().navTo("TeamMember", {MemberID: sId}, !sap.ui.Device.system.phone);
 		},
 		
+		getTeamId: function (iID) {
+			console.log("Got you !!");
+			console.log(iID);			
+		},
+		
 		onAddTeamFloat: function (oEvent) {
 			var that = this;
 			if (!this._NewTeamDialog) {
@@ -219,7 +244,46 @@ sap.ui.define([
 
 			// open new member dialog
 			this._NewTeamDialog.open();
-		}
+		},
 		
+		onShowAllMembers: function(oEvent) {
+			if (! this._oDialog) {
+				this._oDialog = sap.ui.xmlfragment("sap.ui.demo.mORMot.view.Members", this);
+			}
+			this.getView().addDependent(this._oDialog);
+
+			// toggle compact style
+			jQuery.sap.syncStyleClass("sapUiSizeCompact", this.getView(), this._oDialog);
+			this._oDialog.open();
+		},
+		handleMembersSearch: function(oEvent) {
+			var sValue = oEvent.getParameter("value");
+			var oFilter = new Filter("LastName", sap.ui.model.FilterOperator.Contains, sValue);
+			var oBinding = oEvent.getSource().getBinding("items");
+			oBinding.filter([oFilter]);
+		},
+		handleMembersClose: function(oEvent) {
+			this._oDialog.close;
+			var aItem = oEvent.getParameter("selectedItem");
+			var oBindContext = aItem.getBindingContext();
+			
+			console.log(oBindContext.getObject().Phone);
+			console.log(oBindContext.getObject().ID);			
+			
+			var oModel = oBindContext.getModel();
+			var sKey = oBindContext.getPath();
+			// remove starting slash
+			sKey = sKey.substr(1);
+			var oNode = oModel.oData[sKey];			
+			
+			var aContexts = oEvent.getParameter("selectedContexts");
+			if (aContexts.length) {
+				MessageToast.show("You have chosen " + aContexts.map(function(oContext) { return oContext.getObject().LastName; }).join(", "));
+			}
+			oEvent.getSource().getBinding("items").filter([]);
+			if (oNode) {
+				this._router().navTo("Member", {TeamID: oNode.MemberTeam, MemberID: oNode.ID}, !Device.system.phone);				
+			}
+		} 		
 	});
 });

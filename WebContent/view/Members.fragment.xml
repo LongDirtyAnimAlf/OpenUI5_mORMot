@@ -1,0 +1,53 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core">
+	<TableSelectDialog
+		noDataText="No Members Found"
+		title="Select Member"
+		search="handleMembersSearch"
+		confirm="handleMembersClose"
+		close="handleMembersClose"
+		items="{
+			path : '/Member',
+			sorter : {
+				path : 'LastName',
+				descending : false
+			}
+		}">
+		<ColumnListItem>
+			<cells>
+				<ObjectIdentifier
+					title="{LastName}"
+					text="{ID}" />
+				<Text text="{FirstName}" />
+				<Text
+					text="{
+						path : 'MemberTeam',
+						formatter : '.formatter.teamName' 
+					}" />
+			</cells>
+		</ColumnListItem>
+		<columns>
+			<Column minScreenWidth="Tablet">
+				<header>
+					<Text text="LastName" />
+				</header>
+			</Column>
+			<Column
+				minScreenWidth="Tablet"
+				demandPopin="true" >
+				<header>
+					<Text text="FirstName" />
+				</header>
+			</Column>
+			<Column
+				width="10em"
+				demandPopin="true"
+				hAlign="Center">
+				<header>
+					<Text text="Team" />
+				</header>
+			</Column>
+		</columns>
+	</TableSelectDialog>
+</core:FragmentDefinition>

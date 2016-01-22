@@ -51,9 +51,20 @@ sap.ui.define(["sap/ui/core/format/NumberFormat",
 		
 		imageURL : function (value) {
 			return value+'/Image';
-		}		
+		},
 		
-	
+		teamName : function (iID) {
+			if (iID) {
+				var oModel = this.getView().getModel();
+				var oNode = oModel.oData["Team/"+iID];
+				if (oNode.Name) {
+					return oNode.Name;
+				} else {
+					return iID;						
+				}
+			}
+			return "unknown";			
+		}
 	};
 	return formatter;
 });
