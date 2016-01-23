@@ -72,9 +72,9 @@ Temporary Items
 *.db3
 backup/
 lib/
+lib*/
 bin/
 exe/
-lib*/
 mORMot-master/
 !mORMot-master/place_your_mormot_source_here.txt
 .settings/

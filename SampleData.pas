@@ -84,6 +84,8 @@ type
     fPictureUrl: RawUTF8;
     fResume: TResume;
     fWebAddress: RawUTF8;
+    fActive: boolean;
+    fNumberOfGames: integer;
     fMemberTeam:TSQLTeam;
   public
     class procedure InitializeTable(Server: TSQLRestServer; const FieldName: RawUTF8;
@@ -115,6 +117,8 @@ type
     property PictureUrl: RawUTF8 read fPictureUrl write fPictureUrl;
     property Resume: TResume read fResume write fResume;
     property WebAddress: RawUTF8 read fWebAddress write fWebAddress;
+    property Active: boolean read fActive write fActive;
+    property NumberOfGames: integer read fNumberOfGames write fNumberOfGames;
     property MemberTeam:TSQLTeam read fMemberTeam write fMemberTeam;
   end;
 
@@ -174,6 +178,7 @@ class procedure TSQLMember.InitializeTable(Server: TSQLRestServer;
   const FieldName: RawUTF8; Options: TSQLInitializeTableOptions);
 var
   aMember:TSQLMember;
+  x:integer;
 begin
   inherited InitializeTable(Server,FieldName,Options);
   if FieldName='' then
@@ -213,6 +218,8 @@ begin
       aMember.PictureUrl:='img/john.jpg';
       aMember.MemberTeam:=TSQLTeam(1);
       aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
+      aMember.Active:=True;
+      aMember.NumberOfGames:=100;
       Server.Add(aMember,true);
 
       aMember.NewAddress.Clear;
@@ -225,6 +232,8 @@ begin
       aMember.WebAddress:='http://synopse.info';
       aMember.MemberTeam:=TSQLTeam(1);
       aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
+      aMember.Active:=False;
+      aMember.NumberOfGames:=500;
       Server.Add(aMember,true);
 
       aMember.FirstName:='Don';
@@ -235,7 +244,23 @@ begin
       aMember.WebAddress:='https://en.wikipedia.org/wiki/Don_(honorific)';
       aMember.MemberTeam:=TSQLTeam(2);
       aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
+      aMember.Active:=True;
+      aMember.NumberOfGames:=5;
+
       Server.Add(aMember,true);
+
+      for x:=1 to 100 do
+      begin
+        aMember.NewAddress.Clear;
+        aMember.Resume.Clear;
+        aMember.ClearProperties;
+        aMember.FirstName:='FirstName-'+inttoStr(x);
+        aMember.LastName:='LastName-'+inttoStr(x);
+        aMember.MemberTeam:=TSQLTeam(5);
+        aMember.LogonName:=aMember.FirstName+'.'+aMember.LastName;
+        aMember.Active:=False;
+        Server.Add(aMember,true);
+      end;
 
     finally
       aMember.Free;

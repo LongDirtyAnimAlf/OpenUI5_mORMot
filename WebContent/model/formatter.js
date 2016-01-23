@@ -56,12 +56,16 @@ sap.ui.define(["sap/ui/core/format/NumberFormat",
 		teamName : function (iID) {
 			if (iID) {
 				var oModel = this.getView().getModel();
-				var oNode = oModel.oData["Team/"+iID];
-				if (oNode.Name) {
-					return oNode.Name;
-				} else {
-					return iID;						
-				}
+				if (oModel) {
+					var oNode = oModel.oData["Team/"+iID];
+					if (oNode) {
+						if (oNode.Name) {
+							return oNode.Name;
+						} else {
+							return iID;						
+						}
+					}
+				} 
 			}
 			return "unknown";			
 		}

@@ -20,7 +20,7 @@ sap.ui.define([
 		init: function () {
 			// call overwritten init (calls createContent)
 			UIComponent.prototype.init.apply(this, arguments);
-
+			
 			// set i18n model
 			var oI18nModel = new ResourceModel({
 				bundleName: "sap.ui.demo.mORMot.i18n.appTexts"
@@ -34,12 +34,18 @@ sap.ui.define([
 			oModel.setKey("ID");
 			oModel.setmORMotRootResponse(true);
 			
+			oModel.attachRequestCompleted(function(data) {
+				console.log("oModel.attachRequestCompleted");				
+				 var model = data.getSource();
+				 console.log(model);
+			});
 			
 			// javascript mORMot client ... thanks to esmondb
 			var mORMotClient = mORMot.Client.getInstance();
 			function onlogin(success, data, statusText) {
 				if (success) {
 					sap.m.MessageToast.show("Login of " + data + " successfull");
+					oModel.refresh();
 				} else {
 					if (data==400) {
 						sap.m.MessageToast.show("Login not needed ... continuing !");

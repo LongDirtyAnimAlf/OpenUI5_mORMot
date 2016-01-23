@@ -44,6 +44,9 @@
 				select="handleMemberListSelect"
 				noDataText="{i18n>TEAM_NO_DATA}"
 				busyIndicatorDelay="0"
+				growing="true"
+    			growingThreshold="3"
+    			growingScrollToLoad="true"				
 				items="{
 					path : '/Member',
 					sorter : {

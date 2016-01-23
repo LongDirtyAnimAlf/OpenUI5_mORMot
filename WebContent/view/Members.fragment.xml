@@ -7,18 +7,21 @@
 		search="handleMembersSearch"
 		confirm="handleMembersClose"
 		close="handleMembersClose"
+		growing="true"
+    	growingThreshold="10"
+    	growingScrollToLoad="true"				
 		items="{
 			path : '/Member',
 			sorter : {
 				path : 'LastName',
 				descending : false
-			}
+			},
+			parameters : {select:'ID,FirstName,LastName,MemberTeam,Active'}			
 		}">
 		<ColumnListItem>
 			<cells>
 				<ObjectIdentifier
 					title="{LastName}"
-					icon="{PictureUrl}"					
 					text="ID {ID}"/>
 				<Text text="{FirstName}" />
 				<Text
@@ -26,6 +29,7 @@
 						path : 'MemberTeam',
 						formatter : '.formatter.teamName' 
 					}" />
+				<CheckBox selected="{Active}" enabled="false" />
 			</cells>
 		</ColumnListItem>
 		<columns>
@@ -47,6 +51,13 @@
 				hAlign="Center">
 				<header>
 					<Text text="{i18n>TEAM}" />
+				</header>
+			</Column>
+			<Column
+				minScreenWidth="Tablet"
+				hAlign="Center">
+				<header>
+					<Text text="{i18n>ACTIVE}" />
 				</header>
 			</Column>
 		</columns>

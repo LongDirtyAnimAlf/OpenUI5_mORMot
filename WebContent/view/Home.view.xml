@@ -55,6 +55,9 @@
 				mode="{device>/listMode}"
 				select="handleMemberListSelect"
 				noDataText="{i18n>HOME_NO_DATA}"
+				growing="true"
+    			growingThreshold="10"
+    			growingScrollToLoad="true"				
 				items="{
 					path : '/Member',
 					parameters : {select:'ID,FirstName,LastName,PictureUrl,MemberTeam'}
@@ -79,6 +82,9 @@
 				id="TeamList"
 				headerText="{i18n>HOME_TEAM_LIST_HEADER}"
 				mode="None"
+				growing="true"
+    			growingThreshold="10"
+    			growingScrollToLoad="true"				
 				items="{
 					path : '/Team',
 					sorter : {
