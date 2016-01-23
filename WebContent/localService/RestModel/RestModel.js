@@ -63,7 +63,7 @@ sap.ui.define([
 			this.sDefaultCountMode = CountMode.Request
 			//this.sDefaultOperationMode = OperationMode.Client;
 			this.sDefaultOperationMode = OperationMode.Auto
-			//this.sDefaultUpdateMethod = UpdateMethod.Put;
+			this.sDefaultUpdateMethod = UpdateMethod.Put;
 			
 			this.bTokenHandling = false;			
 			
