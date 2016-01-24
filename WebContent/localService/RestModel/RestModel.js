@@ -484,7 +484,32 @@ sap.ui.define([
 
 		oRequest.requestUri = oRequest.requestUri.replace("%20asc","&dir=asc");		
 		oRequest.requestUri = oRequest.requestUri.replace("%20desc","&dir=desc");		
-		oRequest.requestUri = oRequest.requestUri.replace("eq","=");		
+		
+		// server side filters: translate into (mORMot-) SQL commands
+		
+		if (oRequest.requestUri.indexOf('$filter')!=-1) {
+			
+			oRequest.requestUri = oRequest.requestUri.replace("%20eq%20","%20=%20");
+			oRequest.requestUri = oRequest.requestUri.replace("%20lt%20","%20<%20");
+			oRequest.requestUri = oRequest.requestUri.replace("%20le%20","%20<=%20");		
+			oRequest.requestUri = oRequest.requestUri.replace("%20gt%20","%20>%20");		
+			oRequest.requestUri = oRequest.requestUri.replace("%20gt%20","%20>=%20");		
+			oRequest.requestUri = oRequest.requestUri.replace("%20ne%20","%20<>%20");		
+
+			var aFilter;		
+			var aNewFilter;		
+			
+			while (oRequest.requestUri.indexOf('substringof')!=-1) {
+				
+				aFilter = oRequest.requestUri.substr(oRequest.requestUri.indexOf('substringof'));
+				aFilter = aFilter.substr(0,aFilter.indexOf(')')+1);
+				
+				aNewFilter = aFilter.slice(aFilter.indexOf(',')+1,aFilter.indexOf(')'));
+				aNewFilter = aNewFilter + "%20LIKE%20%27%25" + aFilter.slice(aFilter.indexOf("%27")+3,aFilter.lastIndexOf("%27"))+"%25%27";
+					
+				oRequest.requestUri = oRequest.requestUri.replace(aFilter,aNewFilter);			
+			}
+		}
 		
 		//oRequest.crossDomain = true;
 		
@@ -492,7 +517,6 @@ sap.ui.define([
 		//        xmlHttpRequest.withCredentials = true;
 	    //}
 		
-		//oRequest.url = this.signUrl(oRequest.url);
 		oRequest.url = this.signUrl(oRequest.requestUri);		
 		
 		var oRequestHandle = jQuery.ajax(oRequest);

@@ -1,19 +1,14 @@
-unit Main;
+unit DataServer;
 
 {$I Synopse.inc}
 
 interface
 
 uses
-  {$ifdef MSWINDOWS}
-  Windows,
-  Messages,
-  {$endif}
   {$ifdef Darwin}
   Unix,
   {$endif}
-  SysUtils, Classes, Controls,
-  Forms, StdCtrls, Dialogs,
+  SysUtils, Classes,
   SynCommons, mORMot,
   mORMotSQLite3, SynSQLite3Static,
   mORMotHttpServer, SynCrtSock,
@@ -63,90 +58,28 @@ type
     ServerRoot:string;
   end;
 
-
-  { TForm1 }
-
-  TForm1 = class(TForm)
-    btnOpen: TButton;
-    btnRoot: TButton;
-    Label1: TLabel;
-    Button1: TButton;
-    Label2: TLabel;
-    Memo1: TMemo;
-    OpenDialog1: TOpenDialog;
-    procedure btnOpenClick(Sender: TObject);
-    procedure btnRootClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-  private
-    function OnLogEvent(Sender: TTextWriter; Level: TSynLogInfo;
-      const Text: RawUTF8):boolean;
+  TODataServer = class(TSQLRestServerDB)
+  protected
+    fRootFolder: TFileName;
+    fDataFolder: TFileName;
+    fAppFolder: TFileName;
   public
-    Model: TSQLModel;
-    DB: TSQLRestServerDB;
-    Server: TSQLHttpServer;
+    Server: TCustomHttpServer;
+    constructor Create(const aRootFolder: TFileName; const aRootURI: RawUTF8); reintroduce;
+    destructor Destroy; override;
   end;
-
-
-
-var
-  Form1: TForm1;
 
 implementation
 
-{$ifdef FPC}
-{$R *.lfm}
-{$else}
-{$R *.dfm}
-{$endif}
-
-uses
-  {$ifdef FPC}
-  LCLIntf; // for OpenURL
-  {$else}
-  ShellApi;
- {$endif}
-
-{ TForm1 }
-
-function TForm1.OnLogEvent(Sender: TTextWriter; Level: TSynLogInfo;
-      const Text: RawUTF8):boolean;
-begin
-  result:=True;
-  Memo1.Lines.Append(Text);
-end;
-
-procedure TForm1.Button1Click(Sender: TObject);
-begin
-  Close;
-end;
-
-procedure TForm1.btnOpenClick(Sender: TObject);
-begin
-  {$ifdef MSWINDOWS}
-  ShellExecute(0,'open','http://'+HOST+':'+PORT+'/'+STATICROOT+'/'+INDEXFILE,
-      nil,nil,SW_SHOWNORMAL);
-  {$else}
-  {$ifdef FPC}
-  OpenURL('http://'+HOST+':'+PORT+'/'+STATICROOT+'/'+INDEXFILE);
-  {$endif}
-  {$endif}
-end;
-
-procedure TForm1.btnRootClick(Sender: TObject);
-begin
-  if OpenDialog1.Execute then
-  begin
-    TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(OpenDialog1.FileName);
-  end;
-end;
-
-procedure TForm1.FormCreate(Sender: TObject);
+constructor TODataServer.Create(const aRootFolder: TFileName; const aRootURI: RawUTF8);
 var
   x:integer;
 begin
+
+   fRootFolder := EnsureDirectoryExists(ExpandFileName(aRootFolder),true);
+   fDataFolder := EnsureDirectoryExists(fRootFolder+'data'+PathDelim,true);
+   fAppFolder := EnsureDirectoryExists(ExpandFileName(''),true);
+
 
   with TSQLLog.Family do begin
     Level := [sllError, sllDebug, sllSQL, sllCache, sllResult, sllDB, sllHTTP, sllClient, sllServer];
@@ -158,18 +91,20 @@ begin
   end;
 
   Model := CreateSampleModel;
-  DB := TSQLRestServerDB.Create(Model,ChangeFileExt(ExeVersion.ProgramFileName,'.db3'),true);
-  DB.CreateMissingTables;
-  DB.Html200WithNoBodyReturns204:=True;
+
+  inherited Create(Model,fRootFolder+'data.db3',False);
+
+  CreateMissingTables;
+  Html200WithNoBodyReturns204:=True;
 
   // adapted for OpenUI5
-  DB.URIPagingParameters.Select        := '$SELECT=';
-  DB.URIPagingParameters.StartIndex    := '$SKIP=';
-  DB.URIPagingParameters.Results       := '$TOP=';
-  DB.URIPagingParameters.Sort          := '$ORDERBY=';
-  DB.URIPagingParameters.Where         := '$FILTER=';
+  URIPagingParameters.Select        := '$SELECT=';
+  URIPagingParameters.StartIndex    := '$SKIP=';
+  URIPagingParameters.Results       := '$TOP=';
+  URIPagingParameters.Sort          := '$ORDERBY=';
+  URIPagingParameters.Where         := '$FILTER=';
 
-  Server := TCustomHttpServer.Create(PORT,[DB],'+',HTTP_DEFAULT_MODE,32,secNone,STATICROOT);
+  Server := TCustomHttpServer.Create(PORT,[Self],'+',HTTP_DEFAULT_MODE,32,secNone,STATICROOT);
   Server.AccessControlAllowOrigin := '*'; // allow cross-site AJAX queries
 
   TCustomHttpServer(Server).ServerRoot:=ExtractFilePath(ParamStr(0))+WEBROOT;
@@ -177,21 +112,13 @@ begin
   if NOT DirectoryExists(TCustomHttpServer(Server).ServerRoot) then
      TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(ParamStr(0));
 
-  OpenDialog1.InitialDir:=TCustomHttpServer(Server).ServerRoot;
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
+destructor TODataServer.Destroy;
 begin
   Server.Free;
-  DB.Free;
   Model.Free;
 end;
-
-procedure TForm1.FormShow(Sender: TObject);
-begin
-  Label1.Caption := Caption;
-end;
-
 
 { TCustomHttpServer }
 
@@ -372,7 +299,6 @@ begin
       // important !!!!
       // OpenUI5 needs this header for $metadata
       Ctxt.OutContentType := 'application/xml';
-      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*';
 
       result := 200;
     end;
@@ -381,7 +307,6 @@ begin
     begin
       Ctxt.OutContent := InttoStr(aCount);
       Ctxt.OutContentType := TEXT_CONTENT_TYPE;
-      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*';
       result := 200;
     end;
 

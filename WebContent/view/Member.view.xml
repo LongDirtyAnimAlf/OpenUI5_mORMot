@@ -40,7 +40,6 @@
           			<Button 
             			text="{i18n>UPDATE_BUTTON_TEXT}"
             			type="Accept"
-            			visible="{device>/isNoPhone}"
             			press="onUpdate" />
           			<Button 
             			text="{i18n>CANCEL_BUTTON_TEXT}"

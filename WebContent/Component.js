@@ -42,6 +42,9 @@ sap.ui.define([
 			
 			// javascript mORMot client ... thanks to esmondb
 			var mORMotClient = mORMot.Client.getInstance();
+			
+			oModel.mORMotClient = mORMotClient;			
+			
 			function onlogin(success, data, statusText) {
 				if (success) {
 					sap.m.MessageToast.show("Login of " + data + " successfull");
@@ -54,8 +57,8 @@ sap.ui.define([
 					}
 				}
 			}
+			
 			mORMotClient.logIn(model.Config.getServiceUrl(), mORMotRoot, "User", "synopse", onlogin);
-			oModel.mORMotClient = mORMotClient; 
 			
 			oModel.setDefaultBindingMode(sap.ui.model.BindingMode.TwoWay);			
 

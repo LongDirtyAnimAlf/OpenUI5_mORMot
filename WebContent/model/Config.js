@@ -31,7 +31,8 @@ model.Config.getHost = function() {
       return "http://localhost:8080";
   } else {
       // the real webaddress of the mORMot REST server
-      return "http://ec2-54-194-211-233.eu-west-1.compute.amazonaws.com:8080";
+      //return "http://ec2-54-194-211-233.eu-west-1.compute.amazonaws.com:8080";
+      return "http://www.consulab.nl:8080";      
   }
 };
 
