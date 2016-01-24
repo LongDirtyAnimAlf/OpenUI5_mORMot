@@ -127,10 +127,11 @@ sap.ui.define([
 		var sDataKey;
 
 		//check for metadata path
-		if (this.oMetadata && this.oMetadata.isLoaded() && sResolvedPath && sResolvedPath.indexOf('/#') > -1)  {
-			// Metadata binding resolved by ODataMetadata
-			oNode = this.oMetadata._getAnnotation(sResolvedPath);
-		} else {
+		//if (this.oMetadata && this.oMetadata.isLoaded() && sResolvedPath && sResolvedPath.indexOf('/#') > -1)  {
+		//	// Metadata binding resolved by ODataMetadata
+		//	oNode = this.oMetadata._getAnnotation(sResolvedPath);
+		//} else
+		{
 			if (!sResolvedPath) {
 				return oNode;
 			}

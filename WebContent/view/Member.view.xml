@@ -113,7 +113,7 @@
     		</HBox>
     		<HBox alignItems="Center" justifyContent="Left" class="sapUiSmallMargin">
 				<core:Icon src="sap-icon://globe" size="1.5em" color="#4E90FF"/>
-	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>WWW_BUTTON_TEXT.TOOLTIP}" class="sapUiSmallMargin"/>
+	    		<Link target="_blank" href="{WebAddress}" text="{path : 'WebAddress', type : 'sap.ui.model.odata.type.String', constraints : {'maxLength':'30'}}" tooltip="{i18n>WWW_BUTTON_TEXT.TOOLTIP}" class="sapUiSmallMargin" press="handleMemberWebButtonPress"/>
     		</HBox>
     		
 			<form:Form id="FormDisplay"
@@ -151,8 +151,8 @@
 
 			<l:Grid
 				class="sapUiSmallMarginTop"
-			hSpacing="2"
-			defaultSpan="L6 M6 S10">
+				hSpacing="2"
+				defaultSpan="L6 M6 S10">
 				<l:content>
 					<Image src="{PictureUrl}" id="realImage0" width="100%">
 						<layoutData>
@@ -192,7 +192,7 @@
 			<Label text="{i18n>PHONE}"/> 
 			<Input value="{path: 'Phone', type: 'sap.ui.model.odata.type.String', constraints: {maxLength: 15, isDigitSequence: true}}"/>
 			<Label text="{i18n>DOB}" />
-			<DateTimeInput type="Date" value="{Dob}"/>
+			<DatePicker value="{Dob}" valueFormat="dd-MM-yyyy" displayFormat="long"/>
 			<Label text="{i18n>GENDER}" />			
 			<RadioButton groupName="sex" id="gender_male"   text="Male"  />
        		<RadioButton groupName="sex" id="gender_female" text="Female" />				
@@ -203,6 +203,29 @@
 				decorative = "true"
 				densityAware = "false"/>
 			</form:SimpleForm>
+			<Panel
+				class="sapUiContentPadding"
+				headerText="{i18n>ObjectCommentsTabTitle}">
+				<content>
+					<FeedInput post="onPost"/>
+					<List
+						id="idCommentsList"
+						noDataText="{i18n>ObjectCommentNoData}"
+						showSeparators="Inner"
+						items="{
+							path: 'productFeedback>/productComments',
+							sorter: {
+							    path: 'date',
+							    descending: true
+							}
+						}">
+						<FeedListItem
+							info="{productFeedback>type}"
+							text="{productFeedback>comment}"
+							timestamp="{productFeedback>date}"/>
+					</List>
+				</content>
+			</Panel>
 		</content>
 	</Page>
 </mvc:View>

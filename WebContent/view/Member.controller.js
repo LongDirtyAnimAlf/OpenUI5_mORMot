@@ -1,10 +1,11 @@
 sap.ui.define([
     'jquery.sap.global',               
 	'sap/ui/demo/mORMot/localService/BaseController',
+	'sap/ui/core/format/DateFormat',	
 	'sap/ui/demo/mORMot/model/formatter',
 	'sap/m/MessageToast',
 	'sap/m/MessageBox'
-], function (jQuery,BaseController, formatter, MessageToast, MessageBox) {
+], function (jQuery,BaseController, DateFormat, formatter, MessageToast, MessageBox) {
 	return BaseController.extend("sap.ui.demo.mORMot.view.Member", {
 		formatter : formatter,
 
@@ -107,6 +108,14 @@ sap.ui.define([
 				sap.m.URLHelper.triggerEmail(oData.Email);				
 			}
 		},
+
+		handleMemberWebButtonPress: function() {
+			var oData = this.getView().getBindingContext().getProperty();
+			if (oData.WebAddress) {
+				sap.m.URLHelper.redirect(oData.WebAddress);				
+			}
+		},
+		
 		
 		onUpdate: function() {
 			var oView = this.getView();
@@ -224,6 +233,29 @@ sap.ui.define([
 				 };  
 				 r.readAsArrayBuffer(f);
 			}  
-		}	
+		},
+		
+		onPost: function (oEvent) {
+			var oFormat = DateFormat.getDateTimeInstance({style: "medium"});
+			var sDate = oFormat.format(new Date());
+			var oObject = this.getView().getBindingContext().getObject();
+			var sValue = oEvent.getParameter("value");
+			var oEntry = {
+			    productID: oObject.ID,
+			    type: "Comment",
+			    date: sDate,
+			    comment: sValue
+			};
+
+			// update model
+			var oFeedbackModel = this.getView().getModel("productFeedback");
+			var aEntries = oFeedbackModel.getData().productComments;
+			aEntries.push(oEntry);
+			oFeedbackModel.setData({
+				productComments : aEntries
+			});
+		}
+		
+		
 	});
 });

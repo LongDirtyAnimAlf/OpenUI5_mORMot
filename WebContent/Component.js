@@ -4,11 +4,13 @@ sap.ui.define([
 	'sap/ui/model/resource/ResourceModel',
 	'sap/ui/model/json/JSONModel',
     'sap/ui/demo/mORMot/model/Config',
+	'sap/ui/demo/mORMot/localService/ErrorHandler',    
 	'sap/ui/demo/mORMot/localService/RestModel/RestModel'
 ], function (UIComponent,
 			Router,
 			ResourceModel,
 			JSONModel,
+			ErrorHandler,			
 			mORMotModel) {
 
 	return UIComponent.extend("sap.ui.demo.mORMot.Component", {
@@ -58,12 +60,16 @@ sap.ui.define([
 				}
 			}
 			
-			mORMotClient.logIn(model.Config.getServiceUrl(), mORMotRoot, "User", "synopse", onlogin);
-			
 			oModel.setDefaultBindingMode(sap.ui.model.BindingMode.TwoWay);			
 
 			this.setModel(oModel);
+			
+			this._oErrorHandler = new sap.ui.demo.mORMot.ErrorHandler(this);
+			
+			mORMotClient.logIn(model.Config.getServiceUrl(), mORMotRoot, "User", "synopse", onlogin);			
 
+			this.setModel(new JSONModel({ productComments : [] }), "productFeedback");
+			
 			// set device model
 			var oDeviceModel = new JSONModel({
 				isTouch: sap.ui.Device.support.touch,
@@ -87,6 +93,11 @@ sap.ui.define([
 			this._router.initialize();
 		},
 
+		destroy: function () {
+			this._oErrorHandler.destroy();
+			UIComponent.prototype.destroy.apply(this, arguments);
+		},
+		
 		createContent: function () {
 			// create root view
 			return sap.ui.view({
