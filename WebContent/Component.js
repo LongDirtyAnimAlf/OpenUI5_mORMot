@@ -36,11 +36,14 @@ sap.ui.define([
 			oModel.setKey("ID");
 			oModel.setmORMotRootResponse(true);
 			
+			// for debugging only
+			/*
 			oModel.attachRequestCompleted(function(data) {
 				console.log("oModel.attachRequestCompleted");				
 				 var model = data.getSource();
 				 console.log(model);
 			});
+			*/
 			
 			// javascript mORMot client ... thanks to esmondb
 			var mORMotClient = mORMot.Client.getInstance();

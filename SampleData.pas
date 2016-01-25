@@ -18,11 +18,13 @@ type
   TSQLTeam = class(TSQLRecord)
   private
     fName: RawUTF8;
+    fMembers: TIDDynArray;
   public
     class procedure InitializeTable(Server: TSQLRestServer; const FieldName: RawUTF8;
       Options: TSQLInitializeTableOptions); override;
   published
     property Name: RawUTF8 read fName write fName stored AS_UNIQUE;
+    property Members: TIDDynArray read fMembers write fMembers;
   end;
 
 

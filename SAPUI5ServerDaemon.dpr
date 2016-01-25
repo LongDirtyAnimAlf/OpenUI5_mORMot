@@ -38,6 +38,7 @@ const
                'PropertyRef RawUTF8'+
              '}'+
              'Property_placeholder array of RawUTF8 '+
+             'NavigationProperty array of RawUTF8 '+
            '] '+
            'EntityContainer{'+
              'EntitySet array of RawUTF8 '+
@@ -56,6 +57,7 @@ type
               PropertyRef : RawUTF8;
             end;
             Property_placeholder: array of RawUTF8;
+            NavigationProperty: array of RawUTF8;
           end;
           EntityContainer: record
             EntitySet: array of RawUTF8;
@@ -103,7 +105,8 @@ function TCustomHttpServer.Request(Ctxt: THttpServerRequest): cardinal;
 var
   FileName: TFileName;
   FN: RawUTF8;
-  x,y:integer;
+  x,y,z:integer;
+  //aUserAgent: RawUTF8;
   match:TSQLRestModelMatch;
   aModelStructure,xml: RawUTF8;
   aModel:TSQLModel;
@@ -112,8 +115,6 @@ var
 begin
 
   result:=0;
-
-  //TSQLLog.Add.Log(sllHTTP,'Got URL request: '+Ctxt.URL);
 
   FN:='/'+UpperCase(STATICROOT)+'/';
 
@@ -165,6 +166,8 @@ begin
 
     if (
        (Ctxt.Method='GET')
+       //AND
+       //(Length(Ctxt.AuthenticatedUser)>0)
        ) then
     begin
       for x := 0 to high(fDBServers) do
@@ -206,20 +209,28 @@ begin
         // setting of key .... for mORMot always ID
         aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Key.PropertyRef:='Name="ID"';
 
+        //SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,aModel.Tables[x].RecordProps.Fields.Count+1);
+        //aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[0]:='Name="ID" Nullable="false" Type="Edm.Int64"';
+
         // setting of fields
-        SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,aModel.Tables[x].RecordProps.Fields.Count+1);
+        SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,1);
         aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[0]:='Name="ID" Nullable="false" Type="Edm.Int64"';
         for y := 1 to (aModel.Tables[x].RecordProps.Fields.Count) do
         begin
+
+          if aModel.Tables[x].RecordProps.Fields.Items[y-1].SQLFieldType=sftTID then continue;
+          if aModel.Tables[x].RecordProps.Fields.Items[y-1].SQLFieldType=sftID then continue;
+
           // coarse setting of type
           case aModel.Tables[x].RecordProps.Fields.Items[y-1].SQLDBFieldType of
             ftNull:     FN := '"Null"';
             ftInt64:    FN := '"Edm.Int32"';
             //ftDouble:   FN := '"Edm.Double"';
             //ftCurrency: FN := '"Edm.Double"';
+            //ftCurrency: FN := '"Edm.Decimal"';
             ftDate:     FN := '"Edm.DateTime"';
             ftUTF8:     FN := '"Edm.String"';
-            //ftBlob:     FN := '"Edm.Binary"';
+            ftBlob:     FN := '"Edm.Binary"';
           else
             FN := '"Edm.String"';
           end;
@@ -231,13 +242,58 @@ begin
             sftEnumerate: FN := '"Edm.Int16"';
             sftSet:       FN := '"Edm.Int16"';
           end;
+          // UTF8 array:
+          //FN:='"Collection(Edm.String)"';
 
-          FN:='Name="'+aModel.Tables[x].RecordProps.Fields.Items[y-1].Name+'" Type='+FN;
-          aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[y]:=FN;
+          SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,Length(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder)+1);
+          FN:='Name="'+aModel.Tables[x].RecordProps.Fields.Items[y-1].Name+'" Type='+FN+' Nullable="true" sap:creatable="true" sap:updatable="true"';
+          if aModel.Tables[x].RecordProps.Fields.Items[y-1].SQLDBFieldType=ftBlob
+             then FN:=FN+' sap:sortable="false" sap:filterable="false"'
+             else FN:=FN+' sap:sortable="true" sap:filterable="true"';
+          if aModel.Tables[x].RecordProps.Fields.Items[y-1].FieldWidth>0 then FN:=FN+' MaxLength="'+InttoStr(aModel.Tables[x].RecordProps.Fields.Items[y-1].FieldWidth)+'"';
+          aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[High(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder)]:=FN;
+
+        end;
+
+        // do the navigation properties : mORMot joined tables !!
+        for y := 1 to Length(aModel.Tables[x].RecordProps.JoinedFields) do
+        begin
+
+          // Members field in Team table hard coded for this database ... must be better in future !!
+          // Can / could even be omitted
+          // This reverse field Members in the Team table can also be made a nav-property in the Team table:
+          // Type="Collection(mORmot.Member)"
+          // todo ...
+
+
+          // v2 version of nav-property ...
+          FN:=
+              'Name="'+aModel.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
+              ' ToRole="'+aModel.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'_Members"'+
+              ' FromRole="'+aModel.Tables[x].SQLTableName+'_'+aModel.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
+              ' Relationship="mORMot.'+aModel.Tables[x].SQLTableName+'_'+aModel.Tables[x].RecordProps.JoinedFields[y-1].Name+'_'+aModel.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'_Members"';
+
+          {
+          // v4 version of nav-property ...
+          FN:=
+            'Name="'+aModel.Tables[x].RecordProps.Fields.Items[y-1].Name+'"'+
+            ' Type="mORMot.'+aModel.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'"'+
+            ' Partner="Members"';
+          }
+
+          SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty,Length(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty)+1);
+          aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty[High(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty)]:=FN;
         end;
 
         // setting of entityset
-        aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityContainer.EntitySet[x]:='Name="'+aModel.Tables[x].SQLTableName+'" EntityType="mORMot.'+aModel.Tables[x].SQLTableName+'"';
+        if (aModel.Tables[x].InheritsFrom(TSQLAuthUser)) OR (aModel.Tables[x].InheritsFrom(TSQLAuthGroup))
+           then FN:='sap:creatable="false" sap:updatable="true" sap:deletable="false"'
+           else FN:='sap:creatable="true" sap:updatable="true" sap:deletable="true"';
+        aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityContainer.EntitySet[x]:=
+          'Name="'+aModel.Tables[x].SQLTableName+'"'+
+          ' EntityType="mORMot.'+aModel.Tables[x].SQLTableName+'"'+
+          ' xmlns:sap="http://www.sap.com/Protocols/SAPData"'+
+          ' sap:pageable="true" sap:content-version="1" '+FN;
       end;
 
       aModelStructure := RecordSaveJSON(aMetaData,TypeInfo(TMetaData));
@@ -248,7 +304,7 @@ begin
       xml:=StringReplace(xml,'</Edmx_placeholder>','</edmx:Edmx>',[]);
       xml:=StringReplace(xml,'<DataServices_placeholder>','<edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:MaxDataServiceVersion="3.0" m:DataServiceVersion="1.0">',[]);
       xml:=StringReplace(xml,'</DataServices_placeholder>','</edmx:DataServices>',[]);
-      xml:=StringReplace(xml,'<Schema>','<Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" Namespace="mORMot">',[]);
+      xml:=StringReplace(xml,'<Schema>','<Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" Namespace="mORMot" xml:lang="en">',[]);
 
       xml:=StringReplace(xml,'<Property_placeholder>','<Property ',[rfReplaceAll]);
       xml:=StringReplace(xml,'</Property_placeholder>',' />',[rfReplaceAll]);
@@ -256,12 +312,20 @@ begin
       xml:=StringReplace(xml,'<PropertyRef>','<PropertyRef ',[rfReplaceAll]);
       xml:=StringReplace(xml,'</PropertyRef>',' />',[rfReplaceAll]);
 
+      xml:=StringReplace(xml,'<NavigationProperty>','<NavigationProperty ',[rfReplaceAll]);
+      xml:=StringReplace(xml,'</NavigationProperty>',' />',[rfReplaceAll]);
+
+
       // this is a bit tricky ...
       // everytime an <EntityType> is encountered, it is replaced by <EntityType with table name>
       // works because of the sequence of creating this (see above) ... but still tricky
       for x := 0 to high(aModel.Tables) do
       begin
-        xml:=StringReplace(xml,'<EntityType>','<EntityType Name="'+aModel.Tables[x].SQLTableName+'" Namespace="mORMot" EntityType="mORMot.'+aModel.Tables[x].SQLTableName+'">',[]);
+        xml:=StringReplace(xml,'<EntityType>','<EntityType Name="'+aModel.Tables[x].SQLTableName+'"'+
+               ' Namespace="mORMot" EntityType="mORMot.'+aModel.Tables[x].SQLTableName+'"'+
+               ' xmlns:sap="http://www.sap.com/Protocols/SAPData"'+
+               ' sap:content-version="1"'+
+               '>',[]);
       end;
 
       xml:=StringReplace(xml,'<EntityContainer>','<EntityContainer Name="mORMotService" m:IsDefaultEntityContainer="true">',[]);
@@ -270,11 +334,14 @@ begin
       xml:=StringReplace(xml,'</EntitySet>',' />',[rfReplaceAll]);
 
       xml:=StringReplace(xml,'&quot;','"',[rfReplaceAll]);
+
       Ctxt.OutContent := xml;
       // important !!!!
       // OpenUI5 needs this header for $metadata
       Ctxt.OutContentType := 'application/xml';
-      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*';
+      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*'+
+      #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
+      //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
       result := 200;
     end;
 
@@ -282,7 +349,9 @@ begin
     begin
       Ctxt.OutContent := InttoStr(aCount);
       Ctxt.OutContentType := TEXT_CONTENT_TYPE;
-      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*';
+      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*'+
+      #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
+      //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
       result := 200;
     end;
 
@@ -319,7 +388,7 @@ begin
   TSQLLog.Add.Log(sllInfo,'Model created !!');
 
   TSQLLog.Add.Log(sllInfo,'Database file at '+fDataFolder+PathDelim+'data.db3');
-  DB := TSQLRestServerDB.Create(Model,fDataFolder+PathDelim+'data.db3',false);
+  DB := TSQLRestServerDB.Create(Model,fDataFolder+PathDelim+'data.db3',true);
   DB.CreateMissingTables;
   DB.Html200WithNoBodyReturns204:=True;
   // adapted for OpenUI5
