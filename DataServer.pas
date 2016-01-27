@@ -483,18 +483,19 @@ begin
       {$ifdef METADATAV2}
       Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
       {$else}
-      Ctxt.OutContent := '{"value":'+FN+'}';
+      Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
       {$endif}
 
       if ( (Ctxt.Method='POST') AND (result=201)) then
       begin
         // give back new ID !!
+        // not neede anymore by new mORMot feature
         //FN:=FindIniNameValue(pointer(Ctxt.OutCustomHeaders),'LOCATION:');
         //FN:='{"ID":'+Copy(FN,Pos('/',FN)+1,MaxInt)+'}';
         {$ifdef METADATAV2}
-        Ctxt.OutContent := '{"d":'+FN+'}';
+        Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
         {$else}
-        Ctxt.OutContent := '{"value":'+FN+'}';
+        Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
         {$endif}
       end;
 

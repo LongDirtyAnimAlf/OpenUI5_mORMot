@@ -367,10 +367,6 @@ sap.ui.define([
 		}
 		
 		function upload(sUrl,file) {
-			  var offset = 0; // what's been sent already
-			  var fileSize = file.size;
-			  var chunkSize = 64 * 1024; // bytes
-
 			  $.ajax({
 			      url: sUrl,
 			      method: 'PUT',
