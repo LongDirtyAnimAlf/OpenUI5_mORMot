@@ -89,11 +89,14 @@ sap.ui.define([
 			};
 			oBinding.attachDataReceived(fnHandler);
 			
-			oBinding.refresh();
-			//that._search();
+			//oBinding.refresh();
+			that._search();
 		},
 
 		_search: function (sQuery) {
+			
+			var allFilters = [];
+			
 			var oView = this.getView();
 			var oMemberList = oView.byId("MemberList");
 			var oTeamList = oView.byId("TeamList");
@@ -124,18 +127,15 @@ sap.ui.define([
 			if (oBinding) {
 			
 				if (!bShowSearch) {
-					// reset sorter
 					oBinding.sort();
-				}
-
-				if (bShowSearch) {
-					var oFilter = [new sap.ui.model.Filter("FirstName", sap.ui.model.FilterOperator.Contains, oSearchFieldValue),new sap.ui.model.Filter("LastName", sap.ui.model.FilterOperator.Contains, oSearchFieldValue)];
-					// needed because we want to OR the filters !!
-					var allFilters = new sap.ui.model.Filter(oFilter, false);
-					oBinding.filter(allFilters);
+					//oBinding.filter();					
 				} else {
-					oBinding.filter([]);
+					allFilters = [ 
+						           new sap.ui.model.Filter("FirstName", sap.ui.model.FilterOperator.Contains, oSearchFieldValue),
+						           new sap.ui.model.Filter("LastName", sap.ui.model.FilterOperator.Contains, oSearchFieldValue)
+					];
 				}
+				oBinding.filter(new sap.ui.model.Filter(allFilters, false));				
 			}
 		},
 

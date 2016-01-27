@@ -6,7 +6,7 @@ uses
   Interfaces,
   Forms,
   Main in 'Main.pas' {Form1},
-  SampleData in 'SampleData.pas';
+  SampleData in 'SampleData.pas', dataserver;
 
 {$R *.res}
 

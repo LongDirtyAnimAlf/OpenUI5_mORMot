@@ -212,17 +212,17 @@ sap.ui.define([
 					 console.log(e);					 
 					 var fileContent = e.target.result;
 					 	oModel.updateBlob(sPath,{
-					 			BlobData:fileContent,
+					 			BlobData:f,
 					 			success: function(oResponse1,oResponse2,oResponse3) {
 					 				sap.m.MessageToast.show("Update blob successfull");
 					 				var oImage;
 					 				oImage = that.oView.byId("realImage1");
 					 				oImage.setSrc(oResponse2.url);					 				
-					 				console.log(oImage);
+					 				//console.log(oImage);
 					 				oImage.rerender();
 					 				oImage = that.oView.byId("realImage2");
 					 				oImage.setSrc(oResponse2.url);
-					 				console.log(oImage);					 				
+					 				//console.log(oImage);					 				
 					 				oImage.rerender();
 					 			},
 					 			error: function() {
@@ -232,6 +232,8 @@ sap.ui.define([
 					 	);
 				 };  
 				 r.readAsArrayBuffer(f);
+				 //r.readAsBinaryString(f);
+				 //r.readAsText(f);				 
 			}  
 		},
 		

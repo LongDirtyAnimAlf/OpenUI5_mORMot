@@ -10,7 +10,7 @@
 			<Toolbar id="searchBar">
 				<SearchField
 					id="searchField"
-					showRefreshButton="{device>/isNoTouch}"
+					showRefreshButton="true"
 					placeholder="{i18n>HOME_SEARCH_PLACEHOLDER}"
 					search="handleSearch"
 					tooltip="{i18n>HOME_SEARCH_TOOLTIP}"

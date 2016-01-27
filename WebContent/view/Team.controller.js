@@ -23,6 +23,7 @@ sap.ui.define([
 		
 		onInit : function () {
 			this._router().getRoute("Team").attachMatched(this._loadTeam, this);
+			//this._router().getRoute("Member").attachMatched(this._loadTeam, this);			
 		},
 		
 		_loadTeam : function(oEvent) {

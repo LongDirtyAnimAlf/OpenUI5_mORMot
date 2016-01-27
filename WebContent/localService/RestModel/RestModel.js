@@ -65,7 +65,9 @@ sap.ui.define([
 			this.sDefaultOperationMode = OperationMode.Auto
 			this.sDefaultUpdateMethod = UpdateMethod.Put;
 			
-			this.bTokenHandling = false;			
+			this.bTokenHandling = false;
+			
+			this.bRefreshAfterChange = true;			
 			
 			this.oHeaders["Accept"] = "application/json";
 			
@@ -84,7 +86,69 @@ sap.ui.define([
 	
 	RestModel.prototype.setmORMotRootResponse = function(bValue) {
 		this.bmORMotRootResponse = bValue;
-	};  	
+	};
+	
+	RestModel.prototype._processSuccess = function(oRequest, oResponse, fnSuccess, mGetEntities, mChangeEntities, mEntityTypes) {
+		var oResultData = oResponse.data, bContent, sUri, sPath, that = this;
+		
+		var oFunctionResult;
+
+		bContent = !(oResponse.statusCode === 204 || oResponse.statusCode === '204');
+		
+		// do we have data available
+		// add uri and id into results !!
+		if (bContent && oResultData !== undefined) {
+			
+			sUri = oRequest.requestUri;
+			sPath = sUri.replace(this.sServiceUrl,"");
+			//in batch requests all paths are relative
+			if (!jQuery.sap.startsWith(sPath,'/')) {
+				sPath = '/' + sPath;
+			}
+			sPath = this._normalizePath(sPath);
+			// decrease laundering
+			this.decreaseLaundering(sPath, oRequest.data);
+			
+			// mORMot REST server: after a POST (new data), the new ID can be found here:
+			var sNewKey = oResponse.headers["Location"];
+			if (sNewKey) {
+				sPath = "/"+sNewKey
+			}
+			
+			var oEntityType = that.oMetadata._getEntityTypeByPath(sPath);
+			
+			var sKey = oEntityType.key.propertyRef[0].name;
+			
+			var sUriPath;
+			
+			if (jQuery.sap.endsWith(that.sServiceUrl,'/')) {
+				sUriPath = that.sServiceUrl + sPath.substr(1);
+			} else {
+				sUriPath = that.sServiceUrl + sPath;
+			}
+
+			if (oResultData.results) {
+				for (var attr in oResultData.results) {
+					if ( (typeof oResultData.results[attr] === "object") && (oResultData.results[attr] !== null) ) {
+						oResultData.results[attr].__metadata = {
+								uri: sUriPath+"/"+oResultData.results[attr][sKey],
+								id: sUriPath+"/"+oResultData.results[attr][sKey]
+							}
+					}
+				}
+			} else {
+				if ( (typeof oResultData === "object") && (oResultData !== null) ) {
+					oResultData.__metadata = {
+							uri: sUriPath,
+							id: sUriPath
+					}
+				}
+			}
+			
+		}
+		
+		return ODataModel.prototype._processSuccess.apply(this, [oRequest, oResponse, fnSuccess, mGetEntities, mChangeEntities, mEntityTypes]);
+	};
 
 	// adapted for non odata REST servers	
 	RestModel.prototype._getKey = function(oObject) {
@@ -206,290 +270,46 @@ sap.ui.define([
 		return oNode;
 	};
 	
-	// adapted for standard jquery ajax command for sending and retrieving data and compensate for missing metadata
-	RestModel.prototype._submitRequest = function(oRequest, fnSuccess, fnError){
-		var that = this, oHandler, oRequestHandle, bAborted, pRequestCompleted, fnResolveCompleted;
 
-		//Create promise to track when this request is completed
-		pRequestCompleted = new Promise(function(resolve, reject) {
-			fnResolveCompleted = resolve;
-		});
-
-		function _handleSuccess(oData, oResponse, jqXHR) {
-
-			var sUri = oRequest.url;
-
-			var sPath = sUri.replace(that.sServiceUrl,"");
-			//in batch requests all paths are relative
-			if (!jQuery.sap.startsWith(sPath,'/')) {
-				sPath = '/' + sPath;
-			}
-
-			sPath = that._normalizePath(sPath);
-
-			// decrease laundering
-			that.decreaseLaundering(sPath, oRequest.data);
-			
-			// mORMot REST server: after a POST (new data), the new ID can be found here:
-			var sNewKey = jqXHR.getResponseHeader("Location");
-			if (sNewKey) {
-				sPath = "/"+sNewKey
-			}
-
-			var oEntityType = that.oMetadata._getEntityTypeByPath(sPath);			
-
-			var aNewResponse = {};			
-			
-			// add uri and property to mimic odata metadata results ... bit of a trick ... ;-)
-			if (oData) {
-				
-				var sKey = oEntityType.key.propertyRef[0].name;
-				
-				if (jQuery.sap.endsWith(that.sServiceUrl,'/')) {
-					sPath = that.sServiceUrl + sPath.substr(1);
-				} else {
-					sPath = that.sServiceUrl + sPath;
-				}
-
-				if (jQuery.isArray(oData)) {
-					for (var attr in oData) {
-						if ( (typeof oData[attr] === "object") && (oData[attr] !== null) ) {
-							oData[attr].__metadata = {
-									uri: sPath+"/"+oData[attr][sKey],
-									id: sPath+"/"+oData[attr][sKey]
-								}
-						}
-					}
-					aNewResponse.data = { results:oData};
-				} else {
-					if ( (typeof oData === "object") && (oData !== null) ) {
-						oData.__metadata = {
-								uri: sPath,
-								id: sPath
-						}
-					}
-					aNewResponse.data = oData;
-				}
-			}
-
-			aNewResponse.statusCode = jqXHR.status;
-			aNewResponse.headers = jqXHR.getAllResponseHeaders();
-
-			aNewResponse.url = oRequest.url;
-			aNewResponse.async = oRequest.async;
-			
-			if (!aNewResponse.data) {
-				aNewResponse.data = oRequest.data			
-			}
-			
-			if (!aNewResponse.data && aNewResponse.statusCode==200) {
-				aNewResponse.statusCode = 204;			
-			}
-
-			if (fnSuccess) {
-				fnSuccess(oData, aNewResponse);
-			}
-			fnResolveCompleted();
-		}
-
-		function _handleError(oError,textStatus,errorThrown ) {
-			
-			// If error is a 403 with XSRF token "Required" reset the token and retry sending request
-			if (that.bTokenHandling && oError) {
-				var sToken = that._getHeader("x-csrf-token", oError.getAllResponseHeaders());
-				if (!oRequest.bTokenReset && oError.status == '403' && sToken && sToken.toLowerCase() === "required") {
-					that.resetSecurityToken();
-					oRequest.bTokenReset = true;
-					_submitWithToken();
-					return;
-				}
-			}
-			if (fnError) {
-				fnError(oError,oRequest);
-			}
-			fnResolveCompleted();
-		}
-
-		function _readyForRequest(oRequest) {
-			if (that.bTokenHandling && oRequest.method !== "GET") {
-				that.pReadyForRequest = that.securityTokenAvailable();
-			}
-			return that.pReadyForRequest;
-		}
-
-		function _submitWithToken() {
-			// request token only if we have change operations or batch requests
-			// token needs to be set directly on request headers, as request is already created
-			_readyForRequest(oRequest).then(function(sToken) {
-				// Check bTokenHandling again, as updating the token might disable token handling
-				if (that.bTokenHandling) {
-					oRequest.headers["x-csrf-token"] = sToken;
-				}
-				_submit();
-			}, function() {
-				_submit();
-			});
-		}
-
-		var fireEvent = function(sType, oRequest, oError) {
-			var oEventInfo,
-				aRequests = oRequest.eventInfo.requests;
-			if (aRequests) {
-				jQuery.each(aRequests, function(i, oRequest) {
-					if (jQuery.isArray(oRequest)) {
-						jQuery.each(oRequest, function(i, oRequest) {
-							oEventInfo = that._createEventInfo(oRequest.request, oError);
-							that["fireRequest" + sType](oEventInfo);
-						});
-					} else {
-						oEventInfo = that._createEventInfo(oRequest.request, oError);
-						that["fireRequest" + sType](oEventInfo);
-					}
-				});
-
-				oEventInfo = that._createEventInfo(oRequest, oError, aRequests);
-				that["fireBatchRequest" + sType](oEventInfo);
-			} else {
-				oEventInfo = that._createEventInfo(oRequest, oError, aRequests);
-				that["fireRequest" + sType](oEventInfo);
-			}
-		};
-
-		function _submit() {
-			oRequestHandle = that._request(oRequest, _handleSuccess, _handleError);
-			if (oRequest.eventInfo) {
-				fireEvent("Sent", oRequest, null);
-				delete oRequest.eventInfo;
-			}
-			if (bAborted) {
-				oRequestHandle.abort();
-			}
-		}
-		
-		// If requests are serialized, chain it to the current request, otherwise just submit
-		if (this.bSequentializeRequests) {
-			this.pSequentialRequestCompleted.then(function() {
-				_submitWithToken();
-			});
-			this.pSequentialRequestCompleted = pRequestCompleted;
-		} else {
-			_submitWithToken();
-		}		
-		//_submitWithToken();
-
-		return {
-			abort: function() {
-				if (oRequestHandle) {
-					oRequestHandle.abort();
-				}
-				bAborted = true;
-			}
-		};
-	};
-
-
-	// adapted for standard jquery ajax command for sending and retrieving data	
-	RestModel.prototype._handleError = function(oError, oRequest) {
-		var mParameters = {}, /* fnHandler, */ sToken;
-
-		if (oError.responseJSON) {
-			mParameters.message = oError.responseJSON.errorText;
-		} else {
-			mParameters.message = oError.statusText;
-		}
-		var sErrorMsg = "The following problem occurred: " + mParameters.message;		
-
-		if (this.bTokenHandling) {
-			// if XSRFToken is not valid we get 403 with the x-csrf-token header : Required.
-			// a new token will be fetched in the refresh afterwards.
-			sToken = this._getHeader("x-csrf-token", oError.getAllResponseHeaders());
-			if (oError.status == '403' && sToken && sToken.toLowerCase() === "required") {
-				this.resetSecurityToken();
-			}
-		}
-
-		//if (textStatus == "timeout") {
-		//	create_notify("msgs", { title:'Timeout', text:'Sorry, server is down at the moment. Try again later', icon:'server_down.gif' });
-		//}
-		
-		if (mParameters.message == "Forbidden") {
-			// a bit rough, needed to get an abort in case of a login failure !!
-			//mParameters.statusCode = 0;
-		} else {
-		}
-		
-		mParameters.statusCode = oError.status;		
-		mParameters.statusText = oError.statusText;
-		mParameters.headers = oError.getAllResponseHeaders();
-		mParameters.responseText = oError.responseText;
-
-		jQuery.sap.log.fatal(sErrorMsg);
-		
-		return mParameters;
-	};
-	
-
-	// send and retrieve data with standard jquery ajax 
+	// send and retrieve data with standard OData ... some changes needed !! 
 	RestModel.prototype._request = function(oRequest, fnSuccess, fnError) {
 
-		
-		// Added: ignore root response for mORMot ... remove trailing path delimiter
 		if (
-			this.bDestroyed
-			//||
-			//(oRequest.requestUri.replace(/\/$/g, "")==this.sServiceUrl)
-			//||
-			//(oRequest.method=="HEAD")
-			||
 			(oRequest.requestUri.indexOf("null") > -1)
 		) {
 			return {
 				abort: function() {}
 			};
 		}
-
-		var that = this;
-
-		function wrapHandler(fn) {
-			return function() {
-				// request finished, remove request handle from pending request array
-				var iIndex = jQuery.inArray(oRequestHandle, that.aPendingRequestHandles);
-				if (iIndex > -1) {
-					that.aPendingRequestHandles.splice(iIndex, 1);
-				}
-
-				// call original handler method
-				if (!(oRequestHandle && oRequestHandle.bSuppressErrorHandlerCall)) {
-					fn.apply(this, arguments);
-				}
-			};
-		}
-
-		oRequest.success = wrapHandler(fnSuccess || oRequest.success);
-		oRequest.error = wrapHandler(fnError || oRequest.error);
-
-		oRequest.datatype = 'json';
-		//oRequest.datatype = 'jsonp';		
-
 		delete oRequest.headers["DataServiceVersion"]; // Remove odata header before call
 		delete oRequest.headers["MaxDataServiceVersion"]; // Remove odata header before call
-		
+
 		if (oRequest.data) {
 			if (oRequest.data.__metadata) {
 				delete oRequest.data.__metadata;
 			}
-			if (!jQuery.sap.startsWith(oRequest.headers["Content-Type"], "application/octet-stream")) {
-				oRequest.data=JSON.stringify(oRequest.data);
-			} 			
+			//if (!jQuery.sap.startsWith(oRequest.headers["Content-Type"], "application/octet-stream")) {
+			//	oRequest.data=JSON.stringify(oRequest.data);
+			//} 			
 		}
-
-		oRequest.requestUri = oRequest.requestUri.replace("%20asc","&dir=asc");		
-		oRequest.requestUri = oRequest.requestUri.replace("%20desc","&dir=desc");		
+		
+		//oRequest.requestUri = oRequest.requestUri.replace(":true",":1");		
+		oRequest.requestUri = oRequest.requestUri.replace(":true",":\"true\"");		
+		
+		if (oRequest.requestUri.indexOf('$orderby')!=-1) {
+			oRequest.requestUri = oRequest.requestUri.replace("%20asc","&dir=asc");		
+			oRequest.requestUri = oRequest.requestUri.replace("%20desc","&dir=desc");
+		}
 		
 		// server side filters: translate into (mORMot-) SQL commands
 		
+		// remove empty filter !!
+		if (oRequest.requestUri.indexOf("$filter=()")!=-1) {
+			oRequest.requestUri = oRequest.requestUri.replace("&$filter=()","");			
+			oRequest.requestUri = oRequest.requestUri.replace("$filter=()&","");			
+		}
+		
 		if (oRequest.requestUri.indexOf('$filter')!=-1) {
-			
 			oRequest.requestUri = oRequest.requestUri.replace("%20eq%20","%20=%20");
 			oRequest.requestUri = oRequest.requestUri.replace("%20lt%20","%20<%20");
 			oRequest.requestUri = oRequest.requestUri.replace("%20le%20","%20<=%20");		
@@ -512,22 +332,10 @@ sap.ui.define([
 			}
 		}
 		
-		//oRequest.crossDomain = true;
+		oRequest.requestUri = this.signUrl(oRequest.requestUri);		
 		
-		//oRequest.beforeSend = function(xmlHttpRequest) {
-		//        xmlHttpRequest.withCredentials = true;
-	    //}
+		return ODataModel.prototype._request.apply(this, [oRequest, fnSuccess, fnError]);		
 		
-		oRequest.url = this.signUrl(oRequest.requestUri);		
-		
-		var oRequestHandle = jQuery.ajax(oRequest);
-
-		// add request handle to array and return it (only for async requests)
-		if (oRequest.async !== false) {
-			this.aPendingRequestHandles.push(oRequestHandle);
-		}
-
-		return oRequestHandle;
 	};
 
 	RestModel.prototype.isList = function(sPath, oContext) {
@@ -537,15 +345,13 @@ sap.ui.define([
 	
 	RestModel.prototype._parseResponse = function(oResponse, oRequest, mGetEntities, mChangeEntities) {
 		// no standard REST message parser in existence 
-		// console.log("Response:");
-		// console.log(oResponse);		
+		//console.log("Response:");
+		//console.log(oResponse);		
 	};
 
 	// update mORMot blobs like pictures and such
 	RestModel.prototype.updateBlob = function(sPath, mParameters) {
-		var oBlobData, mHeaders, fnSuccess, fnError, oRequest, sUrl, handleSuccess,
-		sMethod, mRequests, sGroupId, sChangeSetId,
-		that = this;
+		var oBlobData, fnSuccess, fnError, that = this;
 
 		if (mParameters) {
 			oBlobData = mParameters.BlobData;
@@ -553,25 +359,30 @@ sap.ui.define([
 			fnError   = mParameters.error;
 		}
 		
-		sMethod = "PUT";
-		mHeaders = this._getHeaders(mHeaders);
+		function upload(sUrl,file) {
+			  var offset = 0; // what's been sent already
+			  var fileSize = file.size;
+			  var chunkSize = 64 * 1024; // bytes
 
-		handleSuccess = function(oData, oResponse) {
-			if (fnSuccess) {
-				fnSuccess(oData, oResponse);
-			}
-		};
-
-		return this._processRequest(function() {
-			sUrl = that._createRequestUrl(sPath);
-			oRequest = that._createRequest(sUrl, sMethod, mHeaders);
-			mHeaders["Content-Type"] = "application/octet-stream";			
-			mRequests = that.mRequests;
-			oRequest.data = oBlobData;			
-			oRequest.processData = false;			
-			that._pushToRequestQueue(mRequests, sGroupId, sChangeSetId, oRequest, handleSuccess, fnError);
-			return oRequest;
-		});
+			  $.ajax({
+			      url: sUrl,
+			      method: 'PUT',
+			      data: file,
+			      headers: {"Content-Type": "application/octet-stream"},
+			      contentType: false,
+			      //contentType: 'application/octet-stream',
+			      processData: false,
+			      cache: false,
+			      async: true,
+			      success: function(data,data2,data3) {
+			    	  fnSuccess(data,this,data3);
+			      },
+			      error: function(err) {
+			    	  fnError(err);
+			      }
+			  });
+		};		
+		upload(that._createRequestUrl(sPath),oBlobData);
 	};
 
 	RestModel.prototype.signUrl = function(sUrl) {

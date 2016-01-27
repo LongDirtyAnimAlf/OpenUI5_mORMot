@@ -1,6 +1,8 @@
-unit DataServer;
+unit dataserver;
 
 {$I Synopse.inc}
+
+{$define METADATAV2}
 
 interface
 
@@ -14,7 +16,9 @@ uses
   mORMotHttpServer, SynCrtSock,
   SampleData;
 
+{$ifdef METADATAV2}
 const
+  INT64TYPE = '"Edm.Int32"';
   __TMetaData =
   'Edmx_placeholder {'+
      'DataServices_placeholder{'+
@@ -24,6 +28,7 @@ const
                'PropertyRef RawUTF8'+
              '}'+
              'Property_placeholder array of RawUTF8 '+
+             'NavigationProperty array of RawUTF8 '+
            '] '+
            'EntityContainer{'+
              'EntitySet array of RawUTF8 '+
@@ -42,6 +47,7 @@ type
               PropertyRef : RawUTF8;
             end;
             Property_placeholder: array of RawUTF8;
+            NavigationProperty: array of RawUTF8;
           end;
           EntityContainer: record
             EntitySet: array of RawUTF8;
@@ -50,36 +56,90 @@ type
       end;
     end;
   end;
+{$else}
+const
+  INT64TYPE = '"Edm.Int64"';
+  __TMetaData =
+  'Edmx_placeholder {'+
+     'DataServices_placeholder{'+
+        'Schema{'+
+           'EntityType ['+
+             'Key{'+
+               'PropertyRef RawUTF8 '+
+             '}'+
+             'Property_placeholder array of RawUTF8 '+
+             'NavigationProperty array of RawUTF8 '+
+           '] '+
+           'EntityContainer{'+
+             'EntitySet array of RawUTF8 '+
+           '} '+
+           'Annotations ['+
+             'Annotation RawUTF8 '+
+           '] '+
+        '} '+
+     '} '+
+  '}';
+
+type
+  TMetaData = packed record
+    Edmx_placeholder: record
+      DataServices_placeholder: record
+        Schema: record
+          EntityType: array of packed record
+            Key: record
+              PropertyRef : RawUTF8;
+            end;
+            Property_placeholder: array of RawUTF8;
+            NavigationProperty: array of RawUTF8;
+          end;
+          EntityContainer: record
+            EntitySet: array of RawUTF8;
+          end;
+          Annotations: array of packed record
+            Annotation: RawUTF8;
+          end;
+        end;
+      end;
+    end;
+  end;
+  {$endif}
 
   TCustomHttpServer = class(TSQLHttpServer)
   protected
     function Request(Ctxt: THttpServerRequest): cardinal; override;
   public
+    MetaData:RawUTF8;
     ServerRoot:string;
   end;
 
-  TODataServer = class(TSQLRestServerDB)
+  TmORMotODataServer = class(TSQLRestServerDB)
+  private
+    Model:TSQLModel;
   protected
     fRootFolder: TFileName;
     fDataFolder: TFileName;
     fAppFolder: TFileName;
   public
     Server: TCustomHttpServer;
-    constructor Create(const aRootFolder: TFileName; const aRootURI: RawUTF8); reintroduce;
+    constructor Create(const aRootFolder: TFileName=''; const aRootURI: RawUTF8='root'); reintroduce;
     destructor Destroy; override;
   end;
 
 implementation
 
-constructor TODataServer.Create(const aRootFolder: TFileName; const aRootURI: RawUTF8);
+uses
+  SynLog;
+
+constructor TmORMotODataServer.Create(const aRootFolder: TFileName; const aRootURI: RawUTF8);
 var
-  x:integer;
+  x,y:integer;
+  aMetaData:TMetaData;
+  FN: RawUTF8;
 begin
 
-   fRootFolder := EnsureDirectoryExists(ExpandFileName(aRootFolder),true);
-   fDataFolder := EnsureDirectoryExists(fRootFolder+'data'+PathDelim,true);
-   fAppFolder := EnsureDirectoryExists(ExpandFileName(''),true);
-
+  fRootFolder := EnsureDirectoryExists(ExpandFileName(aRootFolder),true);
+  //fDataFolder := EnsureDirectoryExists(fRootFolder+'data'+PathDelim,true);
+  fAppFolder := EnsureDirectoryExists(ExpandFileName(''),true);
 
   with TSQLLog.Family do begin
     Level := [sllError, sllDebug, sllSQL, sllCache, sllResult, sllDB, sllHTTP, sllClient, sllServer];
@@ -87,7 +147,8 @@ begin
     DestinationPath := 'log'+PathDelim;
     if not FileExists(DestinationPath) then  CreateDir(DestinationPath);
     //NoFile := true;
-    EchoCustom := OnLogEvent;
+    //EchoCustom := OnLogEvent;
+    EchoToConsole := LOG_VERBOSE; // log all events to the console
   end;
 
   Model := CreateSampleModel;
@@ -112,9 +173,170 @@ begin
   if NOT DirectoryExists(TCustomHttpServer(Server).ServerRoot) then
      TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(ParamStr(0));
 
+  TSQLLog.Add.Log(sllHTTP,'making Metadata !!');
+
+  SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType,length(Model.Tables));
+  SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityContainer.EntitySet,length(Model.Tables));
+
+  for x := 0 to high(Model.Tables) do
+  begin
+    // setting of key .... for mORMot always ID
+    aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Key.PropertyRef:='Name="ID"';
+
+    //SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,Model.Tables[x].RecordProps.Fields.Count+1);
+    //aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[0]:='Name="ID" Nullable="false" Type='+INT64TYPE;
+
+    // setting of fields
+    SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,1);
+    aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[0]:='Name="ID" Nullable="false" Type='+INT64TYPE;
+    for y := 1 to (Model.Tables[x].RecordProps.Fields.Count) do
+    begin
+
+      if Model.Tables[x].RecordProps.Fields.Items[y-1].SQLFieldType=sftTID then continue;
+      if Model.Tables[x].RecordProps.Fields.Items[y-1].SQLFieldType=sftID then continue;
+
+      // coarse setting of type
+      case Model.Tables[x].RecordProps.Fields.Items[y-1].SQLDBFieldType of
+        ftNull:     FN := '"Null"';
+        ftInt64:    FN := INT64TYPE;
+        //ftDouble:   FN := '"Edm.Double"';
+        //ftCurrency: FN := '"Edm.Double"';
+        //ftCurrency: FN := '"Edm.Decimal"';
+        ftDate:     FN := '"Edm.DateTime"';
+        ftUTF8:     FN := '"Edm.String"';
+        ftBlob:     FN := '"Edm.Binary"';
+      else
+        FN := '"Edm.String"';
+      end;
+
+      // finetuning of type
+      case Model.Tables[x].RecordProps.Fields.Items[y-1].SQLFieldType of
+        sftBoolean:   FN := '"Edm.Boolean"';
+        sftInteger:   FN := '"Edm.Int32"';
+        sftEnumerate: FN := '"Edm.Int16"';
+        sftSet:       FN := '"Edm.Int16"';
+      end;
+      // UTF8 array:
+      //FN:='"Collection(Edm.String)"';
+
+      SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,Length(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder)+1);
+      FN:='Name="'+Model.Tables[x].RecordProps.Fields.Items[y-1].Name+'" Type='+FN+' Nullable="true" sap:creatable="true" sap:updatable="true"';
+      if Model.Tables[x].RecordProps.Fields.Items[y-1].SQLDBFieldType=ftBlob
+         then FN:=FN+' sap:sortable="false" sap:filterable="false"'
+         else FN:=FN+' sap:sortable="true" sap:filterable="true"';
+      if Model.Tables[x].RecordProps.Fields.Items[y-1].FieldWidth>0 then FN:=FN+' MaxLength="'+InttoStr(Model.Tables[x].RecordProps.Fields.Items[y-1].FieldWidth)+'"';
+      aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[High(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder)]:=FN;
+
+    end;
+
+    // do the navigation properties : mORMot joined tables !!
+    for y := 1 to Length(Model.Tables[x].RecordProps.JoinedFields) do
+    begin
+
+      {$ifdef METADATAV2}
+      FN:=
+          'Name="'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
+          ' ToRole="'+Model.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'_Members"'+
+          ' FromRole="'+Model.Tables[x].SQLTableName+'_'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
+          ' Relationship="mORMot.'+Model.Tables[x].SQLTableName+'_'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'_'+Model.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'_Members"';
+      {$else}
+      FN:=
+        'Name="'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
+        ' Type="mORMot.'+Model.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'"';//+
+        //' Partner="Members"';
+      {$endif}
+      SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty,Length(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty)+1);
+      aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty[High(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].NavigationProperty)]:=FN;
+    end;
+
+    // setting of entityset
+    if (Model.Tables[x].InheritsFrom(TSQLAuthUser)) OR (Model.Tables[x].InheritsFrom(TSQLAuthGroup))
+       then FN:='sap:creatable="false" sap:updatable="true" sap:deletable="false"'
+       else FN:='sap:creatable="true" sap:updatable="true" sap:deletable="true"';
+    aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityContainer.EntitySet[x]:=
+      'Name="'+Model.Tables[x].SQLTableName+'"'+
+      ' EntityType="mORMot.'+Model.Tables[x].SQLTableName+'"'+
+      ' sap:pageable="true" sap:content-version="1" '+FN;
+  end;
+
+  {$ifndef METADATAV2}
+  SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.Annotations,3);
+  aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.Annotations[0].Annotation:='Term="Org.OData.Display.V1.Description" String="This is a sample mORMot OData service"';
+  aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.Annotations[1].Annotation:='Term="Org.OData.Display.V1.Description" String="All teams"';
+  aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.Annotations[2].Annotation:='Term="Org.OData.Display.V1.Description" String="All members"';
+  {$endif}
+
+  FN := RecordSaveJSON(aMetaData,TypeInfo(TMetaData));
+
+  JSONBufferToXML(pointer(FN),XMLUTF8_HEADER,'',Server.MetaData);
+
+  {$ifdef METADATAV2}
+  Server.MetaData:=StringReplace(Server.MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">',[]);
+  Server.MetaData:=StringReplace(Server.MetaData,'<DataServices_placeholder>','<edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:MaxDataServiceVersion="3.0" m:DataServiceVersion="1.0">',[]);
+  Server.MetaData:=StringReplace(Server.MetaData,'<Schema>','<Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" Namespace="mORMot" xml:lang="en">',[]);
+  {$else}
+  Server.MetaData:=StringReplace(Server.MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">',[]);
+  Server.MetaData:=StringReplace(Server.MetaData,'DataServices_placeholder','edmx:DataServices',[rfReplaceAll]);
+  Server.MetaData:=StringReplace(Server.MetaData,'<Schema>','<Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="mORMot">',[]);
+  {$endif}
+
+
+  Server.MetaData:=StringReplace(Server.MetaData,'</Edmx_placeholder>','</edmx:Edmx>',[]);
+
+  Server.MetaData:=StringReplace(Server.MetaData,'</DataServices_placeholder>','</edmx:DataServices>',[]);
+
+
+  Server.MetaData:=StringReplace(Server.MetaData,'<Property_placeholder>','<Property ',[rfReplaceAll]);
+  Server.MetaData:=StringReplace(Server.MetaData,'</Property_placeholder>',' />',[rfReplaceAll]);
+
+  Server.MetaData:=StringReplace(Server.MetaData,'<PropertyRef>','<PropertyRef ',[rfReplaceAll]);
+  Server.MetaData:=StringReplace(Server.MetaData,'</PropertyRef>',' />',[rfReplaceAll]);
+
+  Server.MetaData:=StringReplace(Server.MetaData,'<NavigationProperty>','<NavigationProperty ',[rfReplaceAll]);
+  Server.MetaData:=StringReplace(Server.MetaData,'</NavigationProperty>',' />',[rfReplaceAll]);
+
+  {$ifndef METADATAV2}
+  Server.MetaData:=StringReplace(Server.MetaData,'<Annotations>','<Annotations Target="mORMot.mORMotService">',[]);
+  Server.MetaData:=StringReplace(Server.MetaData,'<Annotations>','<Annotations Target="mORMot.Team">',[]);
+  Server.MetaData:=StringReplace(Server.MetaData,'<Annotations>','<Annotations Target="mORMot.Member">',[]);
+
+  Server.MetaData:=StringReplace(Server.MetaData,'<Annotation>','<Annotation ',[rfReplaceAll]);
+  Server.MetaData:=StringReplace(Server.MetaData,'</Annotation>',' />',[rfReplaceAll]);
+  {$endif}
+
+
+  // this is a bit tricky ...
+  // everytime an <EntityType> is encountered, it is replaced by <EntityType with table name>
+  // works because of the sequence of creating this (see above) ... but still tricky
+  for x := 0 to high(Model.Tables) do
+  begin
+    {$ifdef METADATAV2}
+    Server.MetaData:=StringReplace(Server.MetaData,'<EntityType>','<EntityType Name="'+Model.Tables[x].SQLTableName+'"'+
+           ' Namespace="mORMot" EntityType="mORMot.'+Model.Tables[x].SQLTableName+'"'+
+           ' xmlns:sap="http://www.sap.com/Protocols/SAPData"'+
+           ' sap:content-version="1"'+
+           '>',[]);
+    {$else}
+    Server.MetaData:=StringReplace(Server.MetaData,'<EntityType>','<EntityType Name="'+Model.Tables[x].SQLTableName+'"'+
+           ' xmlns:sap="http://www.sap.com/Protocols/SAPData">',[]);
+    {$endif}
+  end;
+
+  {$ifdef METADATAV2}
+  Server.MetaData:=StringReplace(Server.MetaData,'<EntityContainer>','<EntityContainer Name="mORMotService" xmlns:sap="http://www.sap.com/Protocols/SAPData" m:IsDefaultEntityContainer="true">',[]);
+  {$else}
+  Server.MetaData:=StringReplace(Server.MetaData,'<EntityContainer>','<EntityContainer Name="mORMotService" xmlns:sap="http://www.sap.com/Protocols/SAPData">',[]);
+  {$endif}
+
+
+  Server.MetaData:=StringReplace(Server.MetaData,'<EntitySet>','<EntitySet ',[rfReplaceAll]);
+  Server.MetaData:=StringReplace(Server.MetaData,'</EntitySet>',' />',[rfReplaceAll]);
+
+  Server.MetaData:=StringReplace(Server.MetaData,'&quot;','"',[rfReplaceAll]);
+
 end;
 
-destructor TODataServer.Destroy;
+destructor TmORMotODataServer.Destroy;
 begin
   Server.Free;
   Model.Free;
@@ -122,20 +344,24 @@ end;
 
 { TCustomHttpServer }
 
+
+
 function TCustomHttpServer.Request(Ctxt: THttpServerRequest): cardinal;
 var
   FileName: TFileName;
   FN: RawUTF8;
   x,y:integer;
-  //aUserAgent: RawUTF8;
   match:TSQLRestModelMatch;
-  aModelStructure,xml: RawUTF8;
-  aModel:TSQLModel;
   aCount:Int64;
-  aMetaData:TMetaData;
+  bServeMetadata, bServeCount:boolean;
 begin
 
   result:=0;
+
+  bServeMetadata  := false;
+  bServeCount     := false;
+
+  TSQLLog.Add.Log(sllHTTP,'Got URL request: '+Ctxt.URL);
 
   FN:='/'+UpperCase(STATICROOT)+'/';
 
@@ -181,16 +407,11 @@ begin
         FN := copy(Ctxt.URL,2,maxInt) else
         FN := Ctxt.URL;
 
-
-    aCount:=-1;
-    aModel:=nil;
-
-    if (
-       (Ctxt.Method='GET')
-       //AND
-       //(Length(Ctxt.AuthenticatedUser)>0)
-       ) then
+    if (Ctxt.Method='GET') then
     begin
+
+      TSQLLog.Add.Log(sllHTTP,'Inside custom GET');
+
       for x := 0 to high(fDBServers) do
         with Self.fDBServers[x] do
           if Ctxt.UseSSL=(Security=secSSL) then
@@ -200,7 +421,7 @@ begin
             FN:='/'+UpperCase(Server.Model.Root)+'/$METADATA';
             if (IdemPChar(pointer(Ctxt.URL),pointer(FN))) then
             begin
-              aModel:=Server.Model;
+              bServeMetadata := true;
               break
             end;
             for y:=0 to high(Server.Model.Tables) do
@@ -209,6 +430,7 @@ begin
               if (IdemPChar(pointer(Ctxt.URL),pointer(FN))) then
               begin
                 // handle direct !!
+                bServeCount := true;
                 aCount:=0;
                 Server.OneFieldValue(Server.Model.Tables[y], 'COUNT(*)','',[],[],aCount);
                 break
@@ -217,102 +439,54 @@ begin
           end;
     end;
 
-    if Assigned(aModel) then
+    if (bServeMetadata) then
     begin
+      TSQLLog.Add.Log(sllHTTP,'Got metadata request URL:  '+Ctxt.URL);
+      TSQLLog.Add.Log(sllHTTP,'Sending metadata to this URL');
 
-      // reply with model info !!
-
-      SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType,length(aModel.Tables));
-      SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityContainer.EntitySet,length(aModel.Tables));
-
-      for x := 0 to high(aModel.Tables) do
-      begin
-        // setting of key .... for mORMot always ID
-        aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Key.PropertyRef:='Name="ID"';
-
-        // setting of fields
-        SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,aModel.Tables[x].RecordProps.Fields.Count+1);
-        aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[0]:='Name="ID" Nullable="false" Type="Edm.Int64"';
-        for y := 1 to (aModel.Tables[x].RecordProps.Fields.Count) do
-        begin
-          // coarse setting of type
-          case aModel.Tables[x].RecordProps.Fields.Items[y-1].SQLDBFieldType of
-            ftNull:     FN := '"Null"';
-            ftInt64:    FN := '"Edm.Int32"';
-            //ftDouble:   FN := '"Edm.Double"';
-            //ftCurrency: FN := '"Edm.Double"';
-            ftDate:     FN := '"Edm.DateTime"';
-            ftUTF8:     FN := '"Edm.String"';
-            //ftBlob:     FN := '"Edm.Binary"';
-          else
-            FN := '"Edm.String"';
-          end;
-
-          // finetuning of type
-          case aModel.Tables[x].RecordProps.Fields.Items[y-1].SQLFieldType of
-            sftBoolean:   FN := '"Edm.Boolean"';
-            sftInteger:   FN := '"Edm.Int32"';
-            sftEnumerate: FN := '"Edm.Int16"';
-            sftSet:       FN := '"Edm.Int16"';
-          end;
-
-          FN:='Name="'+aModel.Tables[x].RecordProps.Fields.Items[y-1].Name+'" Type='+FN;
-          aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[y]:=FN;
-        end;
-
-        // setting of entityset
-        aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityContainer.EntitySet[x]:='Name="'+aModel.Tables[x].SQLTableName+'" EntityType="mORMot.'+aModel.Tables[x].SQLTableName+'"';
-      end;
-
-      aModelStructure := RecordSaveJSON(aMetaData,TypeInfo(TMetaData));
-
-      JSONBufferToXML(pointer(aModelStructure),XMLUTF8_HEADER,'',xml);
-
-      xml:=StringReplace(xml,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">',[]);
-      xml:=StringReplace(xml,'</Edmx_placeholder>','</edmx:Edmx>',[]);
-      xml:=StringReplace(xml,'<DataServices_placeholder>','<edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:MaxDataServiceVersion="3.0" m:DataServiceVersion="1.0">',[]);
-      xml:=StringReplace(xml,'</DataServices_placeholder>','</edmx:DataServices>',[]);
-      xml:=StringReplace(xml,'<Schema>','<Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" Namespace="mORMot">',[]);
-
-      xml:=StringReplace(xml,'<Property_placeholder>','<Property ',[rfReplaceAll]);
-      xml:=StringReplace(xml,'</Property_placeholder>',' />',[rfReplaceAll]);
-
-      xml:=StringReplace(xml,'<PropertyRef>','<PropertyRef ',[rfReplaceAll]);
-      xml:=StringReplace(xml,'</PropertyRef>',' />',[rfReplaceAll]);
-
-      // this is a bit tricky ...
-      // everytime an <EntityType> is encountered, it is replaced by <EntityType with table name>
-      // works because of the sequence of creating this (see above) ... but still tricky
-      for x := 0 to high(aModel.Tables) do
-      begin
-        xml:=StringReplace(xml,'<EntityType>','<EntityType Name="'+aModel.Tables[x].SQLTableName+'" Namespace="mORMot" EntityType="mORMot.'+aModel.Tables[x].SQLTableName+'">',[]);
-      end;
-
-      xml:=StringReplace(xml,'<EntityContainer>','<EntityContainer Name="mORMotService" m:IsDefaultEntityContainer="true">',[]);
-
-      xml:=StringReplace(xml,'<EntitySet>','<EntitySet ',[rfReplaceAll]);
-      xml:=StringReplace(xml,'</EntitySet>',' />',[rfReplaceAll]);
-
-      xml:=StringReplace(xml,'&quot;','"',[rfReplaceAll]);
-
-      Ctxt.OutContent := xml;
+      Ctxt.OutContent := Self.MetaData;
       // important !!!!
       // OpenUI5 needs this header for $metadata
       Ctxt.OutContentType := 'application/xml';
-
+      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*'+
+      #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
+      //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
       result := 200;
     end;
 
-    if (aCount>-1) then
+    if (bServeCount) then
     begin
+      TSQLLog.Add.Log(sllHTTP,'Got count request URL:  '+Ctxt.URL);
+      TSQLLog.Add.Log(sllHTTP,'Sending count to this URL: '+InttoStr(aCount));
       Ctxt.OutContent := InttoStr(aCount);
       Ctxt.OutContentType := TEXT_CONTENT_TYPE;
+      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*'+
+      #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
+      //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
       result := 200;
     end;
 
-    if result=0 then
+    if ((NOT bServeMetadata) AND (NOT bServeCount)) then
+    begin
       // call the associated TSQLRestServer instance(s)
       result := inherited Request(Ctxt);
+
+      //if ( (Ctxt.Method='GET') AND (Length(Ctxt.OutContent)>0)) then Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
+      FN:='APPLICATION/JSON';
+      if ((Ctxt.Method='GET') AND (IdemPChar(pointer(Ctxt.OutContentType),pointer(FN))) AND (Length(Ctxt.OutContent)>0)) then Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
+
+      if ( (Ctxt.Method='POST') AND (result=201)) then
+      begin
+        // give back new ID !!
+        FN:=FindIniNameValue(pointer(Ctxt.OutCustomHeaders),'LOCATION:');
+        FN:='{"ID":'+Copy(FN,Pos('/',FN)+1,MaxInt)+'}';
+        Ctxt.OutContent := '{"d":'+FN+'}';
+      end;
+
+      TSQLLog.Add.Log(sllHTTP,'Got normal URL:  '+Ctxt.URL);
+      TSQLLog.Add.Log(sllHTTP,'Sending to this URL:  '+Ctxt.OutContent);
+
+    end;
   end;
 end;
 

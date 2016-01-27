@@ -124,16 +124,16 @@ type
     property MemberTeam:TSQLTeam read fMemberTeam write fMemberTeam;
   end;
 
-function CreateSampleModel: TSQLModel;
+function CreateSampleModel(const aRootUri:RawUTF8='root'): TSQLModel;
 
 implementation
 
 uses
   SysUtils;
 
-function CreateSampleModel: TSQLModel;
+function CreateSampleModel(const aRootUri:RawUTF8): TSQLModel;
 begin
-  result := TSQLModel.Create([TSQLTeam,TSQLMember]);
+  result := TSQLModel.Create([TSQLTeam,TSQLMember],aRootUri);
 end;
 
 class procedure TSQLTeam.InitializeTable(Server: TSQLRestServer;
