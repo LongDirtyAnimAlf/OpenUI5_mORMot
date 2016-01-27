@@ -296,8 +296,8 @@ begin
   fNewPhone.CaseSensitive:=False;
   fNewAddress:=TAddress.Create;
   fResume:=TResume.Create;
+  // does not (yet) work
   fPictureUrl:='img/don.jpg';
-
 end;
 
 destructor TSQLMember.Destroy;

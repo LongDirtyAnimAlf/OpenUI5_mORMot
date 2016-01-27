@@ -475,15 +475,8 @@ begin
 
     if ((NOT bServeMetadata) AND (NOT bServeCount)) then
     begin
-
-      if (Ctxt.Method='POST') then
-      begin
-        FN:=Ctxt.InContent;
-      end;
-
       // call the associated TSQLRestServer instance(s)
       result := inherited Request(Ctxt);
-
 
       FN:='APPLICATION/JSON';
       if ((Ctxt.Method='GET') AND (IdemPChar(pointer(Ctxt.OutContentType),pointer(FN))) AND (Length(Ctxt.OutContent)>0)) then
@@ -496,8 +489,8 @@ begin
       if ( (Ctxt.Method='POST') AND (result=201)) then
       begin
         // give back new ID !!
-        FN:=FindIniNameValue(pointer(Ctxt.OutCustomHeaders),'LOCATION:');
-        FN:='{"ID":'+Copy(FN,Pos('/',FN)+1,MaxInt)+'}';
+        //FN:=FindIniNameValue(pointer(Ctxt.OutCustomHeaders),'LOCATION:');
+        //FN:='{"ID":'+Copy(FN,Pos('/',FN)+1,MaxInt)+'}';
         {$ifdef METADATAV2}
         Ctxt.OutContent := '{"d":'+FN+'}';
         {$else}
