@@ -156,14 +156,21 @@ begin
   inherited Create(Model,fRootFolder+'data.db3',False);
 
   CreateMissingTables;
-  Html200WithNoBodyReturns204:=True;
+  Self.Options:=[rsoGetAsJsonNotAsString,rsoHtml200WithNoBodyReturns204,rsoAddReturnsContent];
 
   // adapted for OpenUI5
-  URIPagingParameters.Select        := '$SELECT=';
-  URIPagingParameters.StartIndex    := '$SKIP=';
-  URIPagingParameters.Results       := '$TOP=';
-  URIPagingParameters.Sort          := '$ORDERBY=';
-  URIPagingParameters.Where         := '$FILTER=';
+  URIPagingParameters.Select                := '$SELECT=';
+  URIPagingParameters.StartIndex            := '$SKIP=';
+  URIPagingParameters.Results               := '$TOP=';
+  URIPagingParameters.Sort                  := '$ORDERBY=';
+  URIPagingParameters.Where                 := '$FILTER=';
+
+  // not yet working 100%
+  {$ifdef METADATAV2}
+  //URIPagingParameters.SendTotalRowsCountFmt :=',"__count":%';
+  {$else}
+  //URIPagingParameters.SendTotalRowsCountFmt :=',"odata.count":"%"';
+  {$endif}
 
   Server := TCustomHttpServer.Create(PORT,[Self],'+',HTTP_DEFAULT_MODE,32,secNone,STATICROOT);
   Server.AccessControlAllowOrigin := '*'; // allow cross-site AJAX queries
@@ -220,10 +227,10 @@ begin
       //FN:='"Collection(Edm.String)"';
 
       SetLength(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder,Length(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder)+1);
-      FN:='Name="'+Model.Tables[x].RecordProps.Fields.Items[y-1].Name+'" Type='+FN+' Nullable="true" sap:creatable="true" sap:updatable="true"';
-      if Model.Tables[x].RecordProps.Fields.Items[y-1].SQLDBFieldType=ftBlob
-         then FN:=FN+' sap:sortable="false" sap:filterable="false"'
-         else FN:=FN+' sap:sortable="true" sap:filterable="true"';
+      FN:='Name="'+Model.Tables[x].RecordProps.Fields.Items[y-1].Name+'" Type='+FN+' Nullable="true" sap:updatable="true"';
+      if (Model.Tables[x].RecordProps.Fields.Items[y-1].SQLDBFieldType=ftBlob) OR (Model.Tables[x].RecordProps.Fields.Items[y-1].Name='PictureUrl')
+         then FN:=FN+' sap:sortable="false" sap:filterable="false" sap:creatable="false"'
+         else FN:=FN+' sap:sortable="true" sap:filterable="true" sap:creatable="true"';
       if Model.Tables[x].RecordProps.Fields.Items[y-1].FieldWidth>0 then FN:=FN+' MaxLength="'+InttoStr(Model.Tables[x].RecordProps.Fields.Items[y-1].FieldWidth)+'"';
       aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder[High(aMetaData.Edmx_placeholder.DataServices_placeholder.Schema.EntityType[x].Property_placeholder)]:=FN;
 
@@ -468,19 +475,34 @@ begin
 
     if ((NOT bServeMetadata) AND (NOT bServeCount)) then
     begin
+
+      if (Ctxt.Method='POST') then
+      begin
+        FN:=Ctxt.InContent;
+      end;
+
       // call the associated TSQLRestServer instance(s)
       result := inherited Request(Ctxt);
 
-      //if ( (Ctxt.Method='GET') AND (Length(Ctxt.OutContent)>0)) then Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
+
       FN:='APPLICATION/JSON';
-      if ((Ctxt.Method='GET') AND (IdemPChar(pointer(Ctxt.OutContentType),pointer(FN))) AND (Length(Ctxt.OutContent)>0)) then Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
+      if ((Ctxt.Method='GET') AND (IdemPChar(pointer(Ctxt.OutContentType),pointer(FN))) AND (Length(Ctxt.OutContent)>0)) then
+      {$ifdef METADATAV2}
+      Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
+      {$else}
+      Ctxt.OutContent := '{"value":'+FN+'}';
+      {$endif}
 
       if ( (Ctxt.Method='POST') AND (result=201)) then
       begin
         // give back new ID !!
         FN:=FindIniNameValue(pointer(Ctxt.OutCustomHeaders),'LOCATION:');
         FN:='{"ID":'+Copy(FN,Pos('/',FN)+1,MaxInt)+'}';
+        {$ifdef METADATAV2}
         Ctxt.OutContent := '{"d":'+FN+'}';
+        {$else}
+        Ctxt.OutContent := '{"value":'+FN+'}';
+        {$endif}
       end;
 
       TSQLLog.Add.Log(sllHTTP,'Got normal URL:  '+Ctxt.URL);

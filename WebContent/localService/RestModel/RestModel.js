@@ -60,9 +60,10 @@ sap.ui.define([
 			this.bUseBatch = false;
 			this.bJSON = true;
 			//this.sDefaultCountMode = CountMode.None;
-			this.sDefaultCountMode = CountMode.Request
+			this.sDefaultCountMode = CountMode.Request;
+			//this.sDefaultCountMode = CountMode.Inline;			
 			//this.sDefaultOperationMode = OperationMode.Client;
-			this.sDefaultOperationMode = OperationMode.Auto
+			this.sDefaultOperationMode = OperationMode.Auto;
 			this.sDefaultUpdateMethod = UpdateMethod.Put;
 			
 			this.bTokenHandling = false;
@@ -307,6 +308,12 @@ sap.ui.define([
 		if (oRequest.requestUri.indexOf("$filter=()")!=-1) {
 			oRequest.requestUri = oRequest.requestUri.replace("&$filter=()","");			
 			oRequest.requestUri = oRequest.requestUri.replace("$filter=()&","");			
+		}
+
+		// remove $inlinecount for now !!
+		if (oRequest.requestUri.indexOf("$inlinecount=allpages")!=-1) {
+			oRequest.requestUri = oRequest.requestUri.replace("&$inlinecount=allpages","");			
+			oRequest.requestUri = oRequest.requestUri.replace("$inlinecount=allpages&","");			
 		}
 		
 		if (oRequest.requestUri.indexOf('$filter')!=-1) {
