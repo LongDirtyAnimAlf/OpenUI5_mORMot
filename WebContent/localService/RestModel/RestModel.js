@@ -60,8 +60,9 @@ sap.ui.define([
 			this.bUseBatch = false;
 			this.bJSON = true;
 			//this.sDefaultCountMode = CountMode.None;
-			this.sDefaultCountMode = CountMode.Request;
-			//this.sDefaultCountMode = CountMode.Inline;			
+			//this.sDefaultCountMode = CountMode.Request;
+			//this.sDefaultCountMode = CountMode.Inline;
+			this.sDefaultCountMode = CountMode.Both
 			//this.sDefaultOperationMode = OperationMode.Client;
 			this.sDefaultOperationMode = OperationMode.Server;			
 			//this.sDefaultOperationMode = OperationMode.Auto;
@@ -315,12 +316,6 @@ sap.ui.define([
 			oRequest.requestUri = oRequest.requestUri.replace("$filter=()&","");			
 		}
 
-		// remove $inlinecount for now !!
-		if (oRequest.requestUri.indexOf("$inlinecount=allpages")!=-1) {
-			oRequest.requestUri = oRequest.requestUri.replace("&$inlinecount=allpages","");			
-			oRequest.requestUri = oRequest.requestUri.replace("$inlinecount=allpages&","");			
-		}
-		
 		if (oRequest.requestUri.indexOf('$filter')!=-1) {
 			oRequest.requestUri = oRequest.requestUri.replace("%20eq%20","%20=%20");
 			oRequest.requestUri = oRequest.requestUri.replace("%20lt%20","%20<%20");
@@ -376,9 +371,9 @@ sap.ui.define([
 			      url: sUrl,
 			      method: 'PUT',
 			      data: file,
-			      headers: {"Content-Type": "application/octet-stream"},
-			      contentType: false,
-			      //contentType: 'application/octet-stream',
+			      //headers: {"Content-Type": "application/octet-stream"},
+			      //contentType: false,
+			      contentType: 'application/octet-stream',
 			      processData: false,
 			      cache: false,
 			      async: true,

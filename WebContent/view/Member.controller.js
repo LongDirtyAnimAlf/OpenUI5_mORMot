@@ -124,45 +124,14 @@ sap.ui.define([
 			var sPath = oBinding.getPath();
 			var oModel = oView.getModel();
 
-			// Does already work !!!
-			// But disable for now ... more tests needed. 			
-			//oModel.submitChanges();
 			oModel.submitChanges({ 
-				success: function(){
-					sap.m.MessageToast.show("Update successfull");					
+				success: function(oData){
+					sap.m.MessageToast.show("Update successfull", oData);
  				},
- 				error: function(){
- 					alert("Update failed");
+ 				error: function(oError){
+ 					alert("Update failed", oError);
  				}
  			});
-			
-			/*
-			var mUserData = {};
-			// make a copy of the original ... not really needed ...
-			//var mUserData = jQuery.extend(true, {}, oProperty);
-			
-			mUserData.Email = "iamhappy@gmail.com";
-			
-			mUserData.Country = sPath;
-
-			//mUserData.Email = oView.byId("Email").getValue();
-			//mUserData.FirstName = oView.byId("FirstName").getValue();
-			//mUserData.LastName = oView.byId("LastName").getValue();
-			//mUserData.Phone = oView.byId("Phone").getValue();
-			//mUserData.Address = oView.byId("Address").getValue();			
-
-		    oModel.update(sPath, mUserData, {
-		      success: jQuery.proxy(function(mResponse) {
-		    	  sap.m.MessageToast.show("Update success !!");
-		    	  //oModel.refresh();
-		    	  oView.getElementBinding().refresh();		    	  
-		      }, this),
-		      error: jQuery.proxy(function() {
-		        alert("Problem updating user");
-		      }, this)
-		    });
-		    */
-			
 		},
 		
 		onCancel: function() {

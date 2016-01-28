@@ -165,13 +165,6 @@ begin
   URIPagingParameters.Sort                  := '$ORDERBY=';
   URIPagingParameters.Where                 := '$FILTER=';
 
-  // not yet working 100%
-  {$ifdef METADATAV2}
-  //URIPagingParameters.SendTotalRowsCountFmt :=',"__count":"%"';
-  {$else}
-  //URIPagingParameters.SendTotalRowsCountFmt :=',"odata.count":"%"';
-  {$endif}
-
   Server := TCustomHttpServer.Create(PORT,[Self],'+',HTTP_DEFAULT_MODE,32,secNone,STATICROOT);
   Server.AccessControlAllowOrigin := '*'; // allow cross-site AJAX queries
 
@@ -357,18 +350,30 @@ function TCustomHttpServer.Request(Ctxt: THttpServerRequest): cardinal;
 var
   FileName: TFileName;
   FN: RawUTF8;
+  Count: RawUTF8;
   x,y:integer;
   match:TSQLRestModelMatch;
+  aServer:TSQLRestServer;
   aCount:Int64;
-  bServeMetadata, bServeCount:boolean;
+  bServeMetadata, bServeCount: boolean;
+  {$ifndef METADATAV2}
+  bEncapsulate: boolean;
+  {$endif}
+  Parameters: PUTF8Char;
 begin
 
   result:=0;
 
+  aServer  := nil;
+
   bServeMetadata  := false;
   bServeCount     := false;
 
-  TSQLLog.Add.Log(sllHTTP,'Got URL request: '+Ctxt.URL);
+  {$ifndef METADATAV2}
+  bEncapsulate    := true;
+  {$endif}
+
+  TSQLLog.Add.Log(sllHTTP,'Got URL:  '+Ctxt.URL+', with method: '+Ctxt.Method);
 
   FN:='/'+UpperCase(STATICROOT)+'/';
 
@@ -423,13 +428,14 @@ begin
         with Self.fDBServers[x] do
           if Ctxt.UseSSL=(Security=secSSL) then
           begin
-            match := Server.Model.URIMatch(FN);
+            match    := Server.Model.URIMatch(FN);
             if match=rmNoMatch then continue;
+            aServer  := Server;
             FN:='/'+UpperCase(Server.Model.Root)+'/$METADATA';
             if (IdemPChar(pointer(Ctxt.URL),pointer(FN))) then
             begin
               bServeMetadata := true;
-              break
+              break;
             end;
             for y:=0 to high(Server.Model.Tables) do
             begin
@@ -443,6 +449,7 @@ begin
                 break
               end;
             end;
+            break;
           end;
     end;
 
@@ -475,34 +482,84 @@ begin
 
     if ((NOT bServeMetadata) AND (NOT bServeCount)) then
     begin
+
+      TSQLLog.Add.Log(sllHTTP,'NOT serving metadata or count !!');
+
+      FN:='';
+      Count:='';
+      Parameters:=nil;
+
+      if ( (Ctxt.Method='GET') AND Assigned(aServer) ) then
+      begin
+        x := PosEx(RawUTF8('?'),Ctxt.URL,1);
+        if x>0 then Parameters := @Ctxt.URL[x+1];
+        if Parameters<>nil then
+        begin
+          if Parameters^<>#0 then
+          repeat
+            {$ifdef METADATAV2}
+            UrlDecodeValue(Parameters,'$INLINECOUNT=',Count);
+            {$else}
+            UrlDecodeValue(Parameters,'$COUNT=',Count);
+            {$endif}
+            UrlDecodeValue(Parameters,aServer.URIPagingParameters.Results,FN,@Parameters);
+          until Parameters=nil;
+        end;
+      end;
+
+      if (Length(Count)>0) AND {$ifdef METADATAV2} (IdemPChar(pointer(Count),'ALLPAGES')) {$else} ((IdemPChar(pointer(Count),'TRUE'))) {$endif} then
+      begin
+        {$ifdef METADATAV2}
+        aServer.URIPagingParameters.SendTotalRowsCountFmt :=',"__count":"%"';
+        aServer.URIPagingParameters.EncapsulateResultFmt := '"results"';
+        {$else}
+        bEncapsulate:=False;
+        aServer.URIPagingParameters.SendTotalRowsCountFmt :=',"@odata.count":%';
+        aServer.URIPagingParameters.EncapsulateResultFmt := '"value"';
+        {$endif}
+        if FN='' then
+        begin
+          // Must add URIPagingParameters.Results: without it, the mORMot does not return results
+          // Ctxt.URL is read-only ... we need to contruct a whole new Ctxt structure !!
+          Ctxt.Prepare(Ctxt.URL+'&$top='+InttoStr(MaxInt),Ctxt.Method,Ctxt.InHeaders,Ctxt.InContent,Ctxt.InContentType);
+        end;
+      end;
+
       // call the associated TSQLRestServer instance(s)
+      TSQLLog.Add.Log(sllHTTP,'Performing inherited with URL: '+Ctxt.URL);
       result := inherited Request(Ctxt);
+      TSQLLog.Add.Log(sllHTTP,'Performing inherited done with URL: '+Ctxt.URL);
 
       FN:='APPLICATION/JSON';
       if ((Ctxt.Method='GET') AND (IdemPChar(pointer(Ctxt.OutContentType),pointer(FN))) AND (Length(Ctxt.OutContent)>0)) then
+      // results must be encapsulated
       {$ifdef METADATAV2}
       Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
       {$else}
-      Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
+      // not yet ok !!
+      if bEncapsulate then Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
       {$endif}
 
       if ( (Ctxt.Method='POST') AND (result=201)) then
       begin
         // give back new ID !!
-        // not neede anymore by new mORMot feature
+        // the below is not needed anymore by new mORMot feature
         //FN:=FindIniNameValue(pointer(Ctxt.OutCustomHeaders),'LOCATION:');
         //FN:='{"ID":'+Copy(FN,Pos('/',FN)+1,MaxInt)+'}';
         {$ifdef METADATAV2}
         Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
         {$else}
-        Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
+        // not yet ok !!
+        if bEncapsulate then Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
         {$endif}
       end;
 
-      TSQLLog.Add.Log(sllHTTP,'Got normal URL:  '+Ctxt.URL);
+      TSQLLog.Add.Log(sllHTTP,'Got normal URL:  '+Ctxt.URL+'. Method: '+Ctxt.Method);
       TSQLLog.Add.Log(sllHTTP,'Sending to this URL:  '+Ctxt.OutContent);
 
     end;
+    // must reset : only needed when a OData $count= or $inlinecount= is received !!
+    if (Assigned(aServer)) AND (Length(aServer.URIPagingParameters.SendTotalRowsCountFmt)>0) then aServer.URIPagingParameters.SendTotalRowsCountFmt := '';
   end;
 end;
 

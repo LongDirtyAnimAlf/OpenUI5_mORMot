@@ -296,7 +296,7 @@ begin
   fNewPhone.CaseSensitive:=False;
   fNewAddress:=TAddress.Create;
   fResume:=TResume.Create;
-  // does not (yet) work
+  // default value ... does not (yet) work ... obviously
   fPictureUrl:='img/don.jpg';
 end;
 
