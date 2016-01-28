@@ -20,25 +20,6 @@ sap.ui.define([
 			 Dialog,
 			 Button) {
 	"use strict";
-
-	var oFirstNameSorter = new sap.ui.model.Sorter("FirstName", false, function (oContext) {
-		var name = oContext.getProperty("FirstName");
-		var sKey = name.charAt(0);
-		var text = name.charAt(0);
-		return {
-			key: sKey, // group by first letter of firstname
-			text: text
-		};
-	});
-	var oLastNameSorter = new sap.ui.model.Sorter("LastName", false, function (oContext) {
-		var name = oContext.getProperty("LastName");
-		var sKey = name.charAt(0);
-		var text = name.charAt(0);
-		return {
-			key: sKey, // group by first letter of lastname
-			text: text
-		};
-	});
 	
 	return BaseController.extend("sap.ui.demo.mORMot.view.Home", {
 		formatter : formatter,
@@ -95,40 +76,47 @@ sap.ui.define([
 
 		_search: function (sQuery) {
 			
-			var allFilters = [];
 			
 			var oView = this.getView();
 			var oMemberList = oView.byId("MemberList");
+			//oMemberList.bindAggregation("items", "/Member", new sap.ui.core.ListItem({text:"{FirstName}"}));
+			
 			var oTeamList = oView.byId("TeamList");
 			var oSortFirstNameButton = oView.byId("SortFirstNameButton");
 			var oSortLastNameButton = oView.byId("SortLastNameButton");
 			var oAddTeamButton = oView.byId("AddTeamButton");			
 			var oAllMembersButton = oView.byId("AllMembersButton");			
 			
-			var oSearchFieldValue = ( sQuery || oView.byId("searchField").getValue());			
+			//var oSearchFieldValue = ( sQuery || oView.byId("searchField").getValue());
+			
+			var oSearchFieldValue = sQuery ? sQuery : oView.byId("searchField").getValue();
 
 			// switch visibility of lists and buttons
 			
 			var bShowSearch = oSearchFieldValue.length !== 0;
+			
 			oMemberList.toggleStyleClass("invisible", !bShowSearch);
 			oTeamList.toggleStyleClass("invisible", bShowSearch);
 			oSortFirstNameButton.toggleStyleClass("invisible", !bShowSearch);
 			oSortLastNameButton.toggleStyleClass("invisible", !bShowSearch);			
 			oAddTeamButton.toggleStyleClass("invisible", bShowSearch);
 			oAllMembersButton.toggleStyleClass("invisible", bShowSearch);			
-			
 
 			if (bShowSearch) {
 				this._changeNoDataTextToIndicateLoading(oMemberList);
 			}
 
 			// filter Member list
+			var allFilters = [];
 			var oBinding = oMemberList.getBinding("items");
 			if (oBinding) {
 			
+				// set default sorter
+				if (oBinding.aSorters.length == 0) {
+					this.handleMemberSortLastNameButtonPress();
+				}
 				if (!bShowSearch) {
-					oBinding.sort();
-					//oBinding.filter();					
+					oBinding.filter();					
 				} else {
 					allFilters = [ 
 						           new sap.ui.model.Filter("FirstName", sap.ui.model.FilterOperator.Contains, oSearchFieldValue),
@@ -164,6 +152,15 @@ sap.ui.define([
 		},
 
 		handleMemberSortFirstNameButtonPress: function (oEvent) {
+			var oFirstNameSorter = new Sorter("FirstName", false, function (oContext) {
+				var name = oContext.getProperty("FirstName");
+				var sKey = name.charAt(0);
+				var text = name.charAt(0);
+				return {
+					key: sKey, // group by first letter of firstname
+					text: text
+				};
+			});
 			var oView = this.getView();
 			var oMemberList = oView.byId("MemberList");
 			//var oItem = oEvent.getSource();
@@ -172,6 +169,15 @@ sap.ui.define([
 		},
 
 		handleMemberSortLastNameButtonPress: function (oEvent) {
+			var oLastNameSorter = new Sorter("LastName", false, function (oContext) {
+				var name = oContext.getProperty("LastName");
+				var sKey = name.charAt(0);
+				var text = name.charAt(0);
+				return {
+					key: sKey, // group by first letter of lastname
+					text: text
+				};
+			});
 			var oView = this.getView();
 			var oMemberList = oView.byId("MemberList");
 			//var oItem = oEvent.getSource();

@@ -63,7 +63,8 @@ sap.ui.define([
 			this.sDefaultCountMode = CountMode.Request;
 			//this.sDefaultCountMode = CountMode.Inline;			
 			//this.sDefaultOperationMode = OperationMode.Client;
-			this.sDefaultOperationMode = OperationMode.Auto;
+			this.sDefaultOperationMode = OperationMode.Server;			
+			//this.sDefaultOperationMode = OperationMode.Auto;
 			this.sDefaultUpdateMethod = UpdateMethod.Put;
 			
 			this.bTokenHandling = false;
@@ -110,15 +111,17 @@ sap.ui.define([
 			// decrease laundering
 			this.decreaseLaundering(sPath, oRequest.data);
 			
+			var oEntityType = that.oMetadata._getEntityTypeByPath(sPath);			
+			
 			// mORMot REST server: after a POST (new data), the new ID can be found here:
 			var sNewKey = oResponse.headers["Location"];
 			if (sNewKey) {
-				sPath = "/"+sNewKey
+				sPath = "/"+sNewKey;
+				oRequest.key = sPath; 
 			}
 			
-			var oEntityType = that.oMetadata._getEntityTypeByPath(sPath);
-			
 			var sKey = oEntityType.key.propertyRef[0].name;
+			var sType = oEntityType.entityType;			
 			
 			var sUriPath;
 			
@@ -133,7 +136,8 @@ sap.ui.define([
 					if ( (typeof oResultData.results[attr] === "object") && (oResultData.results[attr] !== null) ) {
 						oResultData.results[attr].__metadata = {
 								uri: sUriPath+"/"+oResultData.results[attr][sKey],
-								id: sUriPath+"/"+oResultData.results[attr][sKey]
+								id: sUriPath+"/"+oResultData.results[attr][sKey],
+								type: sType						
 							}
 					}
 				}
@@ -141,7 +145,8 @@ sap.ui.define([
 				if ( (typeof oResultData === "object") && (oResultData !== null) ) {
 					oResultData.__metadata = {
 							uri: sUriPath,
-							id: sUriPath
+							id: sUriPath,
+							type: sType
 					}
 				}
 			}

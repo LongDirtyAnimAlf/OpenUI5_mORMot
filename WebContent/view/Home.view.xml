@@ -10,7 +10,7 @@
 			<Toolbar id="searchBar">
 				<SearchField
 					id="searchField"
-					showRefreshButton="true"
+					showRefreshButton="{device>/isNoTouch}"
 					placeholder="{i18n>HOME_SEARCH_PLACEHOLDER}"
 					search="handleSearch"
 					tooltip="{i18n>HOME_SEARCH_TOOLTIP}"
@@ -55,6 +55,8 @@
 				mode="{device>/listMode}"
 				select="handleMemberListSelect"
 				noDataText="{i18n>HOME_NO_DATA}"
+				busyIndicatorDelay="500"
+				enableBusyIndicator="true"
 				growing="true"
     			growingThreshold="10"
     			growingScrollToLoad="true"				
@@ -84,7 +86,9 @@
 				mode="None"
 				growing="true"
     			growingThreshold="10"
-    			growingScrollToLoad="true"				
+    			growingScrollToLoad="true"
+    			busyIndicatorDelay="500"
+				enableBusyIndicator="true"
 				items="{
 					path : '/Team',
 					sorter : {

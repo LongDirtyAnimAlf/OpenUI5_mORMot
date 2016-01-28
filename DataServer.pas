@@ -167,7 +167,7 @@ begin
 
   // not yet working 100%
   {$ifdef METADATAV2}
-  //URIPagingParameters.SendTotalRowsCountFmt :=',"__count":%';
+  //URIPagingParameters.SendTotalRowsCountFmt :=',"__count":"%"';
   {$else}
   //URIPagingParameters.SendTotalRowsCountFmt :=',"odata.count":"%"';
   {$endif}
@@ -243,9 +243,9 @@ begin
       {$ifdef METADATAV2}
       FN:=
           'Name="'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
-          ' ToRole="'+Model.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'_Members"'+
-          ' FromRole="'+Model.Tables[x].SQLTableName+'_'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
-          ' Relationship="mORMot.'+Model.Tables[x].SQLTableName+'_'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'_'+Model.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'_Members"';
+          ' ToRole="'+Model.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'"'+
+          ' FromRole="'+Model.Tables[x].SQLTableName+'"'+
+          ' Relationship="mORMot.FK_'+Model.Tables[x].RecordProps.JoinedFieldsTable[y].SQLTableName+'_'+Model.Tables[x].SQLTableName+'"';
       {$else}
       FN:=
         'Name="'+Model.Tables[x].RecordProps.JoinedFields[y-1].Name+'"'+
