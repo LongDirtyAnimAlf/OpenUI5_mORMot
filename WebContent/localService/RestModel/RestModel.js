@@ -377,11 +377,11 @@ sap.ui.define([
 			      processData: false,
 			      cache: false,
 			      async: true,
-			      success: function(data,data2,data3) {
-			    	  fnSuccess(data,this,data3);
+			      success: function(response, textStatus, xhr) {
+			    	  fnSuccess(response,this,xhr);
 			      },
-			      error: function(err) {
-			    	  fnError(err);
+			      error: function(xhr, textStatus, error) {
+			    	  fnError(xhr);
 			      }
 			  });
 		};		

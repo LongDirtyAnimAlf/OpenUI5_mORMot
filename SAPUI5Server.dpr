@@ -3,7 +3,8 @@ program SAPUI5Server;
 uses
   Forms,
   Main in 'Main.pas' {Form1},
-  SampleData in 'SampleData.pas';
+  SampleData in 'SampleData.pas',
+  dataserver in 'dataserver.pas';
 
 {$R *.res}
 

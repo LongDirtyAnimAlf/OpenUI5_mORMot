@@ -15,7 +15,7 @@ const
 
 type
 
-  TSQLTeam = class(TSQLRecord)
+  TSQLTeam = class(TSQLRecordTimed)
   private
     fName: RawUTF8;
     fMembers: TIDDynArray;
@@ -61,7 +61,7 @@ type
 
   TContactData = TRawUTF8List;
 
-  TSQLMember = class(TSQLRecord)
+  TSQLMember = class(TSQLRecordTimed)
   private
     fFirstName: RawUTF8;
     fMiddleName: RawUTF8;
@@ -90,6 +90,7 @@ type
     fNumberOfGames: integer;
     fMemberTeam:TSQLTeam;
   public
+    procedure ComputeFieldsBeforeWrite(aRest: TSQLRest; aOccasion: TSQLEvent); override;
     class procedure InitializeTable(Server: TSQLRestServer; const FieldName: RawUTF8;
       Options: TSQLInitializeTableOptions); override;
     function GetFullName: RawUTF8; virtual;
@@ -175,6 +176,15 @@ function TSQLMember.GetFullName: RawUTF8;
 begin
   result := Trim(Trim(FirstName+' '+MiddleName)+' '+LastName);
 end;
+
+procedure TSQLMember.ComputeFieldsBeforeWrite(aRest: TSQLRest; aOccasion: TSQLEvent);
+begin
+  inherited;
+  fPictureUrl:='img/john.jpg';
+  if (aOccasion=seAdd) then Skype:='My Skype !!';
+  PictureUrl:='img/don.jpg';
+end;
+
 
 class procedure TSQLMember.InitializeTable(Server: TSQLRestServer;
   const FieldName: RawUTF8; Options: TSQLInitializeTableOptions);

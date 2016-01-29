@@ -138,8 +138,13 @@ var
 begin
 
   fRootFolder := EnsureDirectoryExists(ExpandFileName(aRootFolder),true);
+  if fRootFolder=PathDelim then fRootFolder:='.'+fRootFolder;
+
   //fDataFolder := EnsureDirectoryExists(fRootFolder+'data'+PathDelim,true);
+  //if fDataFolder=PathDelim then fDataFolder:='.'+fDataFolder;
+
   fAppFolder := EnsureDirectoryExists(ExpandFileName(''),true);
+  if fAppFolder=PathDelim then fAppFolder:='.'+fAppFolder;
 
   with TSQLLog.Family do begin
     Level := [sllError, sllDebug, sllSQL, sllCache, sllResult, sllDB, sllHTTP, sllClient, sllServer];

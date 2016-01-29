@@ -71,6 +71,7 @@ Temporary Items
 *.log
 *.db3
 backup/
+__history/
 lib/
 lib*/
 bin/
