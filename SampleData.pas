@@ -178,11 +178,16 @@ begin
 end;
 
 procedure TSQLMember.ComputeFieldsBeforeWrite(aRest: TSQLRest; aOccasion: TSQLEvent);
+var
+  S:RawUTF8;
+  bits: TSQLFieldBits;
 begin
   inherited;
-  fPictureUrl:='img/john.jpg';
-  if (aOccasion=seAdd) then Skype:='My Skype !!';
-  PictureUrl:='img/don.jpg';
+  if fPictureUrl='' then fPictureUrl:='img/john.jpg';
+  if (aOccasion=seAdd) AND (fSkype='') then fSkype:='My Skype !!';
+  fTwitter:= 'twitter....';
+  if fLastName='' then fLastName:='gnagnagna ...';
+  S:=GetJSONValues(true,false,bits);
 end;
 
 

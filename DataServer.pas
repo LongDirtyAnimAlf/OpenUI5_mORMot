@@ -108,13 +108,18 @@ type
   protected
     function Request(Ctxt: THttpServerRequest): cardinal; override;
   public
-    MetaData:RawUTF8;
     ServerRoot:string;
+    {$ifndef METADATAV2}
+    MustEncapsulate:boolean;
+    {$endif}
   end;
 
   TmORMotODataServer = class(TSQLRestServerDB)
   private
     Model:TSQLModel;
+    MetaData:RawUTF8;
+    function BeforeUri(Ctxt: TSQLRestServerURIContext): boolean;
+    procedure AfterUri(Ctxt: TSQLRestServerURIContext);
   protected
     fRootFolder: TFileName;
     fDataFolder: TFileName;
@@ -129,6 +134,164 @@ implementation
 
 uses
   SynLog;
+
+
+function TmORMotODataServer.BeforeUri(Ctxt: TSQLRestServerURIContext): boolean;
+var
+  pParameters:PUTF8Char;
+  Count,Top,FN: RawUTF8;
+  bUriHandled:boolean;
+  {$ifdef METADATAV2}
+  x:integer;
+  aCount:Int64;
+  {$endif}
+begin
+  // Here, we get the real (ORM) requests !!
+  // Process them, if needed.
+
+  if (Length(URIPagingParameters.SendTotalRowsCountFmt)>0) then URIPagingParameters.SendTotalRowsCountFmt := '';
+
+  bUriHandled:=false;
+
+  if Ctxt.ClientKind=ckAJAX then
+  begin
+    {$ifndef METADATAV2}
+    Server.MustEncapsulate:=true;
+    {$endif}
+
+    TSQLLog.Add.Log(sllHTTP,'Got new URI:  '+Ctxt.URI);
+    TSQLLog.Add.Log(sllHTTP,'Got new URL:  '+Ctxt.Call^.Url);
+
+    if ((NOT bUriHandled) AND (Ctxt.Method=mGET)) then
+    begin
+      FN:=UpperCase(Model.Root)+'/$METADATA';
+      if (IdemPChar(pointer(Ctxt.Call^.Url),pointer(FN))) then
+      begin
+        TSQLLog.Add.Log(sllHTTP,'Got metadata request URL:  '+Ctxt.Call^.Url);
+        TSQLLog.Add.Log(sllHTTP,'Sending metadata to this URL');
+        Ctxt.Call^.OutBody:=MetaData;
+        // important !!!!
+        // OpenUI5 needs this header for $metadata
+        Ctxt.Call^.OutHead:=HEADER_CONTENT_TYPE+'application/xml'+
+        #13#10'Access-Control-Allow-Origin:*'+
+        #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
+        //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
+        Ctxt.Call^.OutStatus := 200;
+        bUriHandled:=true;
+      end;
+    end;
+
+    {$ifdef METADATAV2}
+    if ((NOT bUriHandled) AND (Ctxt.Method=mGET)) then
+    begin
+      for x:=0 to high(Model.Tables) do
+      begin
+        FN:=UpperCase(Model.Root)+'/'+UpperCase(Model.Tables[x].SQLTableName)+'/$COUNT';
+        if (IdemPChar(pointer(Ctxt.Call^.Url),pointer(FN))) then
+        begin
+          aCount:=0;
+          OneFieldValue(Model.Tables[x], 'COUNT(*)','',[],[],aCount);
+          TSQLLog.Add.Log(sllHTTP,'Got V2 count request URL:  '+Ctxt.Call^.Url);
+          TSQLLog.Add.Log(sllHTTP,'Sending record count to this URL');
+          Ctxt.Call^.OutBody:=InttoStr(aCount);
+          Ctxt.Call^.OutHead:=HEADER_CONTENT_TYPE+TEXT_CONTENT_TYPE+
+          #13#10'Access-Control-Allow-Origin:*'+
+          #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
+          //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
+          Ctxt.Call^.OutStatus := 200;
+          bUriHandled:=true;
+          break
+        end;
+      end;
+    end;
+    {$endif}
+
+    // process count of results if asked for
+    if ((NOT bUriHandled) AND (Ctxt.Method=mGET)) then
+    begin
+      pParameters:=Ctxt.Parameters;
+      if pParameters<>nil then
+      begin
+
+        Count:='';
+        Top:='';
+
+        if pParameters^<>#0 then
+        repeat
+          {$ifdef METADATAV2}
+          UrlDecodeValue(pParameters,'$INLINECOUNT=',Count);
+          {$else}
+          UrlDecodeValue(pParameters,'$COUNT=',Count);
+          {$endif}
+          UrlDecodeValue(pParameters,URIPagingParameters.Results,Top,@pParameters);
+        until pParameters=nil;
+
+        if (Length(Count)>0) AND {$ifdef METADATAV2} (IdemPChar(pointer(Count),'ALLPAGES')) {$else} ((IdemPChar(pointer(Count),'TRUE'))) {$endif} then
+        begin
+          {$ifdef METADATAV2}
+          URIPagingParameters.SendTotalRowsCountFmt :=',"__count":"%"';
+          //mORMot feature request ... not yet available
+          //aServer.URIPagingParameters.EncapsulateResultFmt := '"results"';
+          {$else}
+          Server.MustEncapsulate:=False;
+          URIPagingParameters.SendTotalRowsCountFmt :=',"@odata.count":%';
+          //mORMot feature request ... not yet available
+          //aServer.URIPagingParameters.EncapsulateResultFmt := '"value"';
+          {$endif}
+          if Top='' then
+          begin
+            // Must add URIPagingParameters.Results: without it, the mORMot does not return results
+            // Kind of a hack
+            Ctxt.Call^.Url:=Ctxt.Call^.Url+'&$top='+InttoStr(MaxInt);
+            // Due to new Url, (that creates a new string), the Parameters and ParametersPos have to be set anew !
+            // Kind of a dirty hack
+            Ctxt.ParametersPos := PosEx(RawUTF8('?'),Ctxt.Call^.url,1);
+            if Ctxt.ParametersPos>0 then // '?select=...&where=...' or '?where=...'
+               Ctxt.Parameters := @Ctxt.Call^.url[Ctxt.ParametersPos+1];
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  TSQLLog.Add.Log(sllHTTP,'Got new URL:  '+Ctxt.Call^.Url);
+
+  //execute command if necessary
+  result:=(NOT bUriHandled);
+end;
+
+procedure TmORMotODataServer.AfterUri(Ctxt: TSQLRestServerURIContext);
+var
+  FN:RawUTF8;
+begin
+  TSQLLog.Add.Log(sllHTTP,'Set new URI:  '+Ctxt.URI);
+  TSQLLog.Add.Log(sllHTTP,'Set new URL:  '+Ctxt.Call^.Url);
+
+
+  if Ctxt.ClientKind=ckAJAX then
+  begin
+    if (Length(URIPagingParameters.SendTotalRowsCountFmt)>0) then
+    begin
+      //mORMot feature request ... not yet available, so this work-around ... see above
+      {$ifdef METADATAV2}
+      // values must become results
+      Ctxt.Call^.OutBody:=StringReplace(Ctxt.Call^.OutBody,'{"values":','{"results":',[]);
+      {$else}
+      // values must become value
+      Ctxt.Call^.OutBody:=StringReplace(Ctxt.Call^.OutBody,'{"values":','{"value":',[]);
+      {$endif}
+    end;
+
+    FN:='APPLICATION/JSON';
+    if ((IdemPChar(pointer(Ctxt.Call^.OutBodyType),pointer(FN))) AND (Length(Ctxt.Call^.OutBody)>0)) then
+    // results must be encapsulated
+    {$ifdef METADATAV2}
+    Ctxt.Call^.OutBody := '{"d":'+Ctxt.Call^.OutBody+'}';
+    {$else}
+    if Server.MustEncapsulate then Ctxt.Call^.OutBody := '{"value":'+Ctxt.Call^.OutBody+'}';
+    {$endif}
+  end;
+end;
 
 constructor TmORMotODataServer.Create(const aRootFolder: TFileName; const aRootURI: RawUTF8);
 var
@@ -161,7 +324,7 @@ begin
   inherited Create(Model,fRootFolder+'data.db3',False);
 
   CreateMissingTables;
-  Self.Options:=[rsoGetAsJsonNotAsString,rsoHtml200WithNoBodyReturns204,rsoAddReturnsContent];
+  Self.Options:=[rsoGetAsJsonNotAsString,rsoHtml200WithNoBodyReturns204,rsoAddUpdateReturnsContent,rsoComputeFieldsBeforeWriteOnServerSide];
 
   // adapted for OpenUI5
   URIPagingParameters.Select                := '$SELECT=';
@@ -177,6 +340,9 @@ begin
 
   if NOT DirectoryExists(TCustomHttpServer(Server).ServerRoot) then
      TCustomHttpServer(Server).ServerRoot:=ExtractFileDir(ParamStr(0));
+
+  OnBeforeURI:=BeforeUri;
+  OnAfterURI:=AfterUri;
 
   TSQLLog.Add.Log(sllHTTP,'making Metadata !!');
 
@@ -273,40 +439,40 @@ begin
 
   FN := RecordSaveJSON(aMetaData,TypeInfo(TMetaData));
 
-  JSONBufferToXML(pointer(FN),XMLUTF8_HEADER,'',Server.MetaData);
+  JSONBufferToXML(pointer(FN),XMLUTF8_HEADER,'',MetaData);
 
   {$ifdef METADATAV2}
-  Server.MetaData:=StringReplace(Server.MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">',[]);
-  Server.MetaData:=StringReplace(Server.MetaData,'<DataServices_placeholder>','<edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:MaxDataServiceVersion="3.0" m:DataServiceVersion="1.0">',[]);
-  Server.MetaData:=StringReplace(Server.MetaData,'<Schema>','<Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" Namespace="mORMot" xml:lang="en">',[]);
+  MetaData:=StringReplace(MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">',[]);
+  MetaData:=StringReplace(MetaData,'<DataServices_placeholder>','<edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:MaxDataServiceVersion="3.0" m:DataServiceVersion="1.0">',[]);
+  MetaData:=StringReplace(MetaData,'<Schema>','<Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" Namespace="mORMot" xml:lang="en">',[]);
   {$else}
-  Server.MetaData:=StringReplace(Server.MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">',[]);
-  Server.MetaData:=StringReplace(Server.MetaData,'DataServices_placeholder','edmx:DataServices',[rfReplaceAll]);
-  Server.MetaData:=StringReplace(Server.MetaData,'<Schema>','<Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="mORMot">',[]);
+  MetaData:=StringReplace(MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">',[]);
+  MetaData:=StringReplace(MetaData,'DataServices_placeholder','edmx:DataServices',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'<Schema>','<Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="mORMot">',[]);
   {$endif}
 
 
-  Server.MetaData:=StringReplace(Server.MetaData,'</Edmx_placeholder>','</edmx:Edmx>',[]);
+  MetaData:=StringReplace(MetaData,'</Edmx_placeholder>','</edmx:Edmx>',[]);
 
-  Server.MetaData:=StringReplace(Server.MetaData,'</DataServices_placeholder>','</edmx:DataServices>',[]);
+  MetaData:=StringReplace(MetaData,'</DataServices_placeholder>','</edmx:DataServices>',[]);
 
 
-  Server.MetaData:=StringReplace(Server.MetaData,'<Property_placeholder>','<Property ',[rfReplaceAll]);
-  Server.MetaData:=StringReplace(Server.MetaData,'</Property_placeholder>',' />',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'<Property_placeholder>','<Property ',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'</Property_placeholder>',' />',[rfReplaceAll]);
 
-  Server.MetaData:=StringReplace(Server.MetaData,'<PropertyRef>','<PropertyRef ',[rfReplaceAll]);
-  Server.MetaData:=StringReplace(Server.MetaData,'</PropertyRef>',' />',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'<PropertyRef>','<PropertyRef ',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'</PropertyRef>',' />',[rfReplaceAll]);
 
-  Server.MetaData:=StringReplace(Server.MetaData,'<NavigationProperty>','<NavigationProperty ',[rfReplaceAll]);
-  Server.MetaData:=StringReplace(Server.MetaData,'</NavigationProperty>',' />',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'<NavigationProperty>','<NavigationProperty ',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'</NavigationProperty>',' />',[rfReplaceAll]);
 
   {$ifndef METADATAV2}
-  Server.MetaData:=StringReplace(Server.MetaData,'<Annotations>','<Annotations Target="mORMot.mORMotService">',[]);
-  Server.MetaData:=StringReplace(Server.MetaData,'<Annotations>','<Annotations Target="mORMot.Team">',[]);
-  Server.MetaData:=StringReplace(Server.MetaData,'<Annotations>','<Annotations Target="mORMot.Member">',[]);
+  MetaData:=StringReplace(MetaData,'<Annotations>','<Annotations Target="mORMot.mORMotService">',[]);
+  MetaData:=StringReplace(MetaData,'<Annotations>','<Annotations Target="mORMot.Team">',[]);
+  MetaData:=StringReplace(MetaData,'<Annotations>','<Annotations Target="mORMot.Member">',[]);
 
-  Server.MetaData:=StringReplace(Server.MetaData,'<Annotation>','<Annotation ',[rfReplaceAll]);
-  Server.MetaData:=StringReplace(Server.MetaData,'</Annotation>',' />',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'<Annotation>','<Annotation ',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'</Annotation>',' />',[rfReplaceAll]);
   {$endif}
 
 
@@ -316,28 +482,27 @@ begin
   for x := 0 to high(Model.Tables) do
   begin
     {$ifdef METADATAV2}
-    Server.MetaData:=StringReplace(Server.MetaData,'<EntityType>','<EntityType Name="'+Model.Tables[x].SQLTableName+'"'+
+    MetaData:=StringReplace(MetaData,'<EntityType>','<EntityType Name="'+Model.Tables[x].SQLTableName+'"'+
            ' Namespace="mORMot" EntityType="mORMot.'+Model.Tables[x].SQLTableName+'"'+
            ' xmlns:sap="http://www.sap.com/Protocols/SAPData"'+
            ' sap:content-version="1"'+
            '>',[]);
     {$else}
-    Server.MetaData:=StringReplace(Server.MetaData,'<EntityType>','<EntityType Name="'+Model.Tables[x].SQLTableName+'"'+
+    MetaData:=StringReplace(MetaData,'<EntityType>','<EntityType Name="'+Model.Tables[x].SQLTableName+'"'+
            ' xmlns:sap="http://www.sap.com/Protocols/SAPData">',[]);
     {$endif}
   end;
 
   {$ifdef METADATAV2}
-  Server.MetaData:=StringReplace(Server.MetaData,'<EntityContainer>','<EntityContainer Name="mORMotService" xmlns:sap="http://www.sap.com/Protocols/SAPData" m:IsDefaultEntityContainer="true">',[]);
+  MetaData:=StringReplace(MetaData,'<EntityContainer>','<EntityContainer Name="mORMotService" xmlns:sap="http://www.sap.com/Protocols/SAPData" m:IsDefaultEntityContainer="true">',[]);
   {$else}
-  Server.MetaData:=StringReplace(Server.MetaData,'<EntityContainer>','<EntityContainer Name="mORMotService" xmlns:sap="http://www.sap.com/Protocols/SAPData">',[]);
+  MetaData:=StringReplace(MetaData,'<EntityContainer>','<EntityContainer Name="mORMotService" xmlns:sap="http://www.sap.com/Protocols/SAPData">',[]);
   {$endif}
 
+  MetaData:=StringReplace(MetaData,'<EntitySet>','<EntitySet ',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'</EntitySet>',' />',[rfReplaceAll]);
 
-  Server.MetaData:=StringReplace(Server.MetaData,'<EntitySet>','<EntitySet ',[rfReplaceAll]);
-  Server.MetaData:=StringReplace(Server.MetaData,'</EntitySet>',' />',[rfReplaceAll]);
-
-  Server.MetaData:=StringReplace(Server.MetaData,'&quot;','"',[rfReplaceAll]);
+  MetaData:=StringReplace(MetaData,'&quot;','"',[rfReplaceAll]);
 
 end;
 
@@ -355,39 +520,18 @@ function TCustomHttpServer.Request(Ctxt: THttpServerRequest): cardinal;
 var
   FileName: TFileName;
   FN: RawUTF8;
-  Count: RawUTF8;
-  x,y:integer;
-  match:TSQLRestModelMatch;
-  aServer:TSQLRestServer;
-  aCount:Int64;
-  bServeMetadata, bServeCount: boolean;
-  {$ifndef METADATAV2}
-  bEncapsulate: boolean;
-  {$endif}
-  Parameters: PUTF8Char;
+  x:integer;
 begin
-
-  result:=0;
-
-  aServer  := nil;
-
-  bServeMetadata  := false;
-  bServeCount     := false;
-
-  {$ifndef METADATAV2}
-  bEncapsulate    := true;
-  {$endif}
 
   TSQLLog.Add.Log(sllHTTP,'Got URL:  '+Ctxt.URL+', with method: '+Ctxt.Method);
 
   FN:='/'+UpperCase(STATICROOT)+'/';
 
-  if (Ctxt.Method='GET')
-     AND
-     (IdemPChar(pointer(Ctxt.URL),pointer(FN)))
-     then
+  if ( IdemPChar(pointer(Ctxt.URL),pointer(FN)) OR IdemPChar(pointer(Ctxt.URL),'/FAVICON.ICO') )  then
   begin
-
+    // serve static contents
+    if (Ctxt.Method='GET') then
+    begin
       FN := UrlDecode(copy(Ctxt.URL,Length(STATICROOT)+3,maxInt));
 
       if (PathDelim<>'/')
@@ -416,155 +560,15 @@ begin
         Ctxt.OutCustomHeaders := GetMimeContentTypeHeader('',FileName);
         result := 200;
       end;
-
+    end;
   end
   else
   begin
-    if Ctxt.URL[1]='/' then
-        FN := copy(Ctxt.URL,2,maxInt) else
-        FN := Ctxt.URL;
-
-    if (Ctxt.Method='GET') then
-    begin
-
-      TSQLLog.Add.Log(sllHTTP,'Inside custom GET');
-
-      for x := 0 to high(fDBServers) do
-        with Self.fDBServers[x] do
-          if Ctxt.UseSSL=(Security=secSSL) then
-          begin
-            match    := Server.Model.URIMatch(FN);
-            if match=rmNoMatch then continue;
-            aServer  := Server;
-            FN:='/'+UpperCase(Server.Model.Root)+'/$METADATA';
-            if (IdemPChar(pointer(Ctxt.URL),pointer(FN))) then
-            begin
-              bServeMetadata := true;
-              break;
-            end;
-            for y:=0 to high(Server.Model.Tables) do
-            begin
-              FN:='/'+UpperCase(Server.Model.Root)+'/'+UpperCase(Server.Model.Tables[y].SQLTableName)+'/$COUNT';
-              if (IdemPChar(pointer(Ctxt.URL),pointer(FN))) then
-              begin
-                // handle direct !!
-                bServeCount := true;
-                aCount:=0;
-                Server.OneFieldValue(Server.Model.Tables[y], 'COUNT(*)','',[],[],aCount);
-                break
-              end;
-            end;
-            break;
-          end;
-    end;
-
-    if (bServeMetadata) then
-    begin
-      TSQLLog.Add.Log(sllHTTP,'Got metadata request URL:  '+Ctxt.URL);
-      TSQLLog.Add.Log(sllHTTP,'Sending metadata to this URL');
-
-      Ctxt.OutContent := Self.MetaData;
-      // important !!!!
-      // OpenUI5 needs this header for $metadata
-      Ctxt.OutContentType := 'application/xml';
-      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*'+
-      #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
-      //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
-      result := 200;
-    end;
-
-    if (bServeCount) then
-    begin
-      TSQLLog.Add.Log(sllHTTP,'Got count request URL:  '+Ctxt.URL);
-      TSQLLog.Add.Log(sllHTTP,'Sending count to this URL: '+InttoStr(aCount));
-      Ctxt.OutContent := InttoStr(aCount);
-      Ctxt.OutContentType := TEXT_CONTENT_TYPE;
-      Ctxt.OutCustomHeaders:='Access-Control-Allow-Origin:*'+
-      #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
-      //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
-      result := 200;
-    end;
-
-    if ((NOT bServeMetadata) AND (NOT bServeCount)) then
-    begin
-
-      TSQLLog.Add.Log(sllHTTP,'NOT serving metadata or count !!');
-
-      FN:='';
-      Count:='';
-      Parameters:=nil;
-
-      if ( (Ctxt.Method='GET') AND Assigned(aServer) ) then
-      begin
-        x := PosEx(RawUTF8('?'),Ctxt.URL,1);
-        if x>0 then Parameters := @Ctxt.URL[x+1];
-        if Parameters<>nil then
-        begin
-          if Parameters^<>#0 then
-          repeat
-            {$ifdef METADATAV2}
-            UrlDecodeValue(Parameters,'$INLINECOUNT=',Count);
-            {$else}
-            UrlDecodeValue(Parameters,'$COUNT=',Count);
-            {$endif}
-            UrlDecodeValue(Parameters,aServer.URIPagingParameters.Results,FN,@Parameters);
-          until Parameters=nil;
-        end;
-      end;
-
-      if (Length(Count)>0) AND {$ifdef METADATAV2} (IdemPChar(pointer(Count),'ALLPAGES')) {$else} ((IdemPChar(pointer(Count),'TRUE'))) {$endif} then
-      begin
-        {$ifdef METADATAV2}
-        aServer.URIPagingParameters.SendTotalRowsCountFmt :=',"__count":"%"';
-        aServer.URIPagingParameters.EncapsulateResultFmt := '"results"';
-        {$else}
-        bEncapsulate:=False;
-        aServer.URIPagingParameters.SendTotalRowsCountFmt :=',"@odata.count":%';
-        aServer.URIPagingParameters.EncapsulateResultFmt := '"value"';
-        {$endif}
-        if FN='' then
-        begin
-          // Must add URIPagingParameters.Results: without it, the mORMot does not return results
-          // Ctxt.URL is read-only ... we need to contruct a whole new Ctxt structure !!
-          Ctxt.Prepare(Ctxt.URL+'&$top='+InttoStr(MaxInt),Ctxt.Method,Ctxt.InHeaders,Ctxt.InContent,Ctxt.InContentType);
-        end;
-      end;
-
-      // call the associated TSQLRestServer instance(s)
-      TSQLLog.Add.Log(sllHTTP,'Performing inherited with URL: '+Ctxt.URL);
-      result := inherited Request(Ctxt);
-      TSQLLog.Add.Log(sllHTTP,'Performing inherited done with URL: '+Ctxt.URL);
-
-      FN:='APPLICATION/JSON';
-      if ((Ctxt.Method='GET') AND (IdemPChar(pointer(Ctxt.OutContentType),pointer(FN))) AND (Length(Ctxt.OutContent)>0)) then
-      // results must be encapsulated
-      {$ifdef METADATAV2}
-      Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
-      {$else}
-      // not yet ok !!
-      if bEncapsulate then Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
-      {$endif}
-
-      if ( (Ctxt.Method='POST') AND (result=201)) then
-      begin
-        // give back new ID !!
-        // the below is not needed anymore by new mORMot feature
-        //FN:=FindIniNameValue(pointer(Ctxt.OutCustomHeaders),'LOCATION:');
-        //FN:='{"ID":'+Copy(FN,Pos('/',FN)+1,MaxInt)+'}';
-        {$ifdef METADATAV2}
-        Ctxt.OutContent := '{"d":'+Ctxt.OutContent+'}';
-        {$else}
-        // not yet ok !!
-        if bEncapsulate then Ctxt.OutContent := '{"value":'+Ctxt.OutContent+'}';
-        {$endif}
-      end;
-
-      TSQLLog.Add.Log(sllHTTP,'Got normal URL:  '+Ctxt.URL+'. Method: '+Ctxt.Method);
-      TSQLLog.Add.Log(sllHTTP,'Sending to this URL:  '+Ctxt.OutContent);
-
-    end;
-    // must reset : only needed when a OData $count= or $inlinecount= is received !!
-    if (Assigned(aServer)) AND (Length(aServer.URIPagingParameters.SendTotalRowsCountFmt)>0) then aServer.URIPagingParameters.SendTotalRowsCountFmt := '';
+    // serve all other contents
+    TSQLLog.Add.Log(sllHTTP,'Performing inherited with URL: '+Ctxt.URL);
+    result := inherited Request(Ctxt);
+    TSQLLog.Add.Log(sllHTTP,'Performing inherited done with URL: '+Ctxt.URL);
+    TSQLLog.Add.Log(sllHTTP,'Sending result: '+Ctxt.OutContent);
   end;
 end;
 
