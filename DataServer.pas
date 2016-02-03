@@ -176,7 +176,7 @@ begin
         #13#10'Access-Control-Allow-Origin:*'+
         #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
         //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
-        Ctxt.Call^.OutStatus := 200;
+        Ctxt.Call^.OutStatus := HTML_SUCCESS;
         bUriHandled:=true;
       end;
     end;
@@ -198,7 +198,7 @@ begin
           #13#10'Access-Control-Allow-Origin:*'+
           #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
           //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
-          Ctxt.Call^.OutStatus := 200;
+          Ctxt.Call^.OutStatus := HTML_SUCCESS;
           bUriHandled:=true;
           break
         end;
@@ -443,7 +443,7 @@ begin
 
   {$ifdef METADATAV2}
   MetaData:=StringReplace(MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">',[]);
-  MetaData:=StringReplace(MetaData,'<DataServices_placeholder>','<edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:MaxDataServiceVersion="3.0" m:DataServiceVersion="1.0">',[]);
+  MetaData:=StringReplace(MetaData,'<DataServices_placeholder>','<edmx:DataServices xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" m:MaxDataServiceVersion="2.0" m:DataServiceVersion="2.0">',[]);
   MetaData:=StringReplace(MetaData,'<Schema>','<Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" Namespace="mORMot" xml:lang="en">',[]);
   {$else}
   MetaData:=StringReplace(MetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">',[]);
@@ -540,7 +540,7 @@ begin
       // safety first: no deep directories !!
       //if PosEx('..',FN)>0 then
       //begin
-      //   result := 404;
+      //   result := HTML_NOTFOUND;
       //  exit;
       //end;
 
@@ -553,12 +553,15 @@ begin
 
       FileName := IncludeTrailingPathDelimiter(ServerRoot)+UTF8ToString(FN);
 
-      if DirectoryExists(FileName) then result := 404 else
+      if DirectoryExists(FileName) then result := HTML_FORBIDDEN else
       begin
         Ctxt.OutContent := StringToUTF8(FileName);
         Ctxt.OutContentType := HTTP_RESP_STATICFILE;
         Ctxt.OutCustomHeaders := GetMimeContentTypeHeader('',FileName);
-        result := 200;
+        //#13#10'Access-Control-Allow-Origin:*'+
+        //#13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
+        //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
+        result := HTML_SUCCESS;
       end;
     end;
   end

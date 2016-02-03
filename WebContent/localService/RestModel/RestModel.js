@@ -64,8 +64,8 @@ sap.ui.define([
 			//this.sDefaultCountMode = CountMode.Inline;
 			this.sDefaultCountMode = CountMode.Both
 			//this.sDefaultOperationMode = OperationMode.Client;
-			//this.sDefaultOperationMode = OperationMode.Server;			
-			this.sDefaultOperationMode = OperationMode.Auto;
+			this.sDefaultOperationMode = OperationMode.Server;
+			//this.sDefaultOperationMode = OperationMode.Auto;
 			this.sDefaultUpdateMethod = UpdateMethod.Put;
 			
 			this.bTokenHandling = false;
@@ -310,10 +310,15 @@ sap.ui.define([
 		
 		// server side filters: translate into (mORMot-) SQL commands
 		
-		// remove empty filter !!
+		// remove empty filter !! our mORMot cannot handle empty filter
 		if (oRequest.requestUri.indexOf("$filter=()")!=-1) {
-			oRequest.requestUri = oRequest.requestUri.replace("&$filter=()","");			
-			oRequest.requestUri = oRequest.requestUri.replace("$filter=()&","");			
+			// remove empty filter itself
+			oRequest.requestUri = oRequest.requestUri.replace("$filter=()","");
+			// replace double stale placeholder
+			oRequest.requestUri = oRequest.requestUri.replace("&&","&");
+			// replace stale placeholders at end			
+			oRequest.requestUri = oRequest.requestUri.replace(/&$/g, '');			
+			oRequest.requestUri = oRequest.requestUri.replace(/\?$/g, '');			
 		}
 
 		if (oRequest.requestUri.indexOf('$filter')!=-1) {
