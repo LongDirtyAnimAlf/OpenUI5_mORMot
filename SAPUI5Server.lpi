@@ -32,7 +32,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="SAPUI5Server.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -49,9 +49,14 @@
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="dataserver.pas"/>
+        <Filename Value="DataServer.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="dataserver"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="ODataRestServer.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

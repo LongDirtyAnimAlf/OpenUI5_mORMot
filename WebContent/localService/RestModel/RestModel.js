@@ -131,7 +131,6 @@ sap.ui.define([
 			} else {
 				sUriPath = that.sServiceUrl + sPath;
 			}
-
 			if (oResultData.results) {
 				for (var attr in oResultData.results) {
 					if ( (typeof oResultData.results[attr] === "object") && (oResultData.results[attr] !== null) ) {
@@ -151,7 +150,6 @@ sap.ui.define([
 					}
 				}
 			}
-			
 		}
 		
 		return ODataModel.prototype._processSuccess.apply(this, [oRequest, oResponse, fnSuccess, mGetEntities, mChangeEntities, mEntityTypes]);
@@ -299,7 +297,8 @@ sap.ui.define([
 			//	oRequest.data=JSON.stringify(oRequest.data);
 			//} 			
 		}
-		
+
+    /*
 		//oRequest.requestUri = oRequest.requestUri.replace(":true",":1");		
 		oRequest.requestUri = oRequest.requestUri.replace(":true",":\"true\"");		
 		
@@ -343,6 +342,7 @@ sap.ui.define([
 				oRequest.requestUri = oRequest.requestUri.replace(aFilter,aNewFilter);			
 			}
 		}
+    */
 		
 		oRequest.requestUri = this.signUrl(oRequest.requestUri);		
 		
