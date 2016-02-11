@@ -94,15 +94,13 @@ end;
 procedure TForm1.btnRootClick(Sender: TObject);
 begin
   if OpenDialog1.Execute then
-  begin
-    //TCustomHttpServer(mORMotServer.Server).ServerRoot:=ExtractFileDir(OpenDialog1.FileName);
-  end;
+     mORMotServer.Server.ServerRoot:=ExtractFileDir(OpenDialog1.FileName);
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   mORMotServer:=TmORMotODataServer.Create;
-  //OpenDialog1.InitialDir:=TCustomHttpServer(mORMotServer.Server).ServerRoot;
+  OpenDialog1.InitialDir:=mORMotServer.Server.ServerRoot;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
