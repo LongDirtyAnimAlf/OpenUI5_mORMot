@@ -130,7 +130,7 @@ function CreateSampleModel(const aRootUri:RawUTF8='root'): TSQLModel;
 implementation
 
 uses
-  SysUtils;
+  SysUtils, SynTable;
 
 function CreateSampleModel(const aRootUri:RawUTF8): TSQLModel;
 begin

@@ -41,6 +41,9 @@ type
 
 implementation
 
+uses
+  SynTable;
+
 {$ifdef METADATAV2}
 const
   INT64TYPE = '"Edm.Int32"';
@@ -180,7 +183,7 @@ begin
 
       FileName := IncludeTrailingPathDelimiter(ServerRoot)+UTF8ToString(FN);
 
-      if DirectoryExists(FileName) then result := HTML_FORBIDDEN else
+      if DirectoryExists(FileName) then result := STATUS_FORBIDDEN else
       begin
         Ctxt.OutContent := StringToUTF8(FileName);
         Ctxt.OutContentType := HTTP_RESP_STATICFILE;
@@ -188,7 +191,7 @@ begin
         //#13#10'Access-Control-Allow-Origin:*'+
         //#13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
         //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
-        result := HTML_SUCCESS;
+        result := STATUS_SUCCESS;
       end;
     end;
   end
@@ -197,6 +200,7 @@ begin
 
     // serve all other contents
     TSQLLog.Add.Log(sllHTTP,'Performing inherited with URL: '+Ctxt.URL);
+
 
     result := inherited Request(Ctxt);
 
@@ -215,7 +219,7 @@ begin
   //inherited Create(aPort,aServer);
   inherited Create(aPort,aServer,'+',HTTP_DEFAULT_MODE,32,secNone,STATICROOT);
 
-  aServer.Options:=[rsoGetAsJsonNotAsString,rsoHtml200WithNoBodyReturns204,rsoAddUpdateReturnsContent,rsoComputeFieldsBeforeWriteOnServerSide,rsoGetID_str];
+  aServer.Options:=[rsoGetAsJsonNotAsString,rsoHttp200WithNoBodyReturns204,rsoAddUpdateReturnsContent,rsoComputeFieldsBeforeWriteOnServerSide,rsoGetID_str];
 
   //$select gets rewritten already ... so URIPagingParameters.Select not needed anymore
   //aServer.URIPagingParameters.Select                := '$SELECT=';
@@ -287,7 +291,7 @@ begin
         #13#10'Access-Control-Allow-Origin:*'+
         #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
         //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
-        Ctxt.Call^.OutStatus := HTML_SUCCESS;
+        Ctxt.Call^.OutStatus := STATUS_SUCCESS;
         bUriHandled:=true;
       end;
     end;
@@ -309,7 +313,7 @@ begin
           #13#10'Access-Control-Allow-Origin:*'+
           #13#10'Access-Control-Allow-Methods: POST, PUT, GET, DELETE, LOCK, OPTIONS';
           //#13#10'Access-Control-Allow-Headers: origin, x-requested-with, content-type'
-          Ctxt.Call^.OutStatus := HTML_SUCCESS;
+          Ctxt.Call^.OutStatus := STATUS_SUCCESS;
           bUriHandled:=true;
           break
         end;
