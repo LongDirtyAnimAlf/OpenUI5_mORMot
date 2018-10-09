@@ -42,6 +42,9 @@ type
 implementation
 
 uses
+  {$ifndef FPC}
+  System.StrUtils,
+  {$endif}
   SynTable;
 
 {$ifdef METADATAV2}
@@ -445,7 +448,7 @@ function TODataHttpServer.GetMetadata(aServer: TSQLRestServer):string;
 var
   aMetaData:TMetaData;
   x,y:integer;
-  FN:string;
+  FN:RawUTF8;
   RawMetaData:RawUTF8;
   aSQLModel:TSQLModel;
 begin
@@ -558,7 +561,7 @@ begin
 
   FN := RecordSaveJSON(aMetaData,TypeInfo(TMetaData));
 
-  JSONBufferToXML(pointer(FN),XMLUTF8_HEADER,'',RawMetaData);
+  JSONBufferToXML(PUTF8Char(FN),XMLUTF8_HEADER,'',RawMetaData);
 
   {$ifdef METADATAV2}
   RawMetaData:=StringReplace(RawMetaData,'<Edmx_placeholder>','<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">',[]);
